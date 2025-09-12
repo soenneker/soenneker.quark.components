@@ -1,0 +1,37 @@
+namespace Soenneker.Quark.Components.Border;
+
+/// <summary>
+/// Simplified border utility with fluent API and Bootstrap-first approach.
+/// </summary>
+public static class Border
+{
+    /// <summary>
+    /// No border (0).
+    /// </summary>
+    public static BorderBuilder S0 => new(0);
+
+    /// <summary>
+    /// Size 1 border (1px).
+    /// </summary>
+    public static BorderBuilder S1 => new(1);
+
+    /// <summary>
+    /// Size 2 border (2px).
+    /// </summary>
+    public static BorderBuilder S2 => new(2);
+
+    /// <summary>
+    /// Size 3 border (3px).
+    /// </summary>
+    public static BorderBuilder S3 => new(3);
+
+    /// <summary>
+    /// Size 4 border (4px).
+    /// </summary>
+    public static BorderBuilder S4 => new(4);
+
+    /// <summary>
+    /// Size 5 border (5px).
+    /// </summary>
+    public static BorderBuilder S5 => new(5);
+}

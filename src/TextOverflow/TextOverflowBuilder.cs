@@ -1,0 +1,189 @@
+using System.Collections.Generic;
+using System.Linq;
+using Soenneker.Extensions.String;
+using Soenneker.Quark.Components.Common;
+using Soenneker.Quark.Enums.Breakpoints;
+using TextOverflowEnum = Soenneker.Quark.Enums.TextOverflows.TextOverflow;
+
+namespace Soenneker.Quark.Components.TextOverflow;
+
+/// <summary>
+/// Simplified text overflow builder with fluent API for chaining text overflow rules.
+/// </summary>
+public sealed class TextOverflowBuilder : ICssBuilder
+{
+    private readonly List<TextOverflowRule> _rules = [];
+
+    internal TextOverflowBuilder(TextOverflowEnum textOverflow, Breakpoint? breakpoint = null)
+    {
+        _rules.Add(new TextOverflowRule(textOverflow, breakpoint));
+    }
+
+    internal TextOverflowBuilder(List<TextOverflowRule> rules)
+    {
+        _rules.AddRange(rules);
+    }
+
+    /// <summary>
+    /// Chain with clip text overflow for the next rule.
+    /// </summary>
+    public TextOverflowBuilder Clip => ChainWithTextOverflow(TextOverflowEnum.Clip);
+
+    /// <summary>
+    /// Chain with ellipsis text overflow for the next rule.
+    /// </summary>
+    public TextOverflowBuilder Ellipsis => ChainWithTextOverflow(TextOverflowEnum.Ellipsis);
+
+    /// <summary>
+    /// Chain with inherit text overflow for the next rule.
+    /// </summary>
+    public TextOverflowBuilder Inherit => ChainWithTextOverflow(TextOverflowEnum.Inherit);
+
+    /// <summary>
+    /// Chain with initial text overflow for the next rule.
+    /// </summary>
+    public TextOverflowBuilder Initial => ChainWithTextOverflow(TextOverflowEnum.Initial);
+
+    /// <summary>
+    /// Chain with revert text overflow for the next rule.
+    /// </summary>
+    public TextOverflowBuilder Revert => ChainWithTextOverflow(TextOverflowEnum.Revert);
+
+    /// <summary>
+    /// Chain with revert-layer text overflow for the next rule.
+    /// </summary>
+    public TextOverflowBuilder RevertLayer => ChainWithTextOverflow(TextOverflowEnum.RevertLayer);
+
+    /// <summary>
+    /// Chain with unset text overflow for the next rule.
+    /// </summary>
+    public TextOverflowBuilder Unset => ChainWithTextOverflow(TextOverflowEnum.Unset);
+
+    /// <summary>
+    /// Apply on phone devices (portrait phones, less than 576px).
+    /// </summary>
+    public TextOverflowBuilder OnPhone => ChainWithBreakpoint(Breakpoint.Phone);
+
+    /// <summary>
+    /// Apply on mobile devices (landscape phones, 576px and up).
+    /// </summary>
+    public TextOverflowBuilder OnMobile => ChainWithBreakpoint(Breakpoint.Mobile);
+
+    /// <summary>
+    /// Apply on tablet devices (tablets, 768px and up).
+    /// </summary>
+    public TextOverflowBuilder OnTablet => ChainWithBreakpoint(Breakpoint.Tablet);
+
+    /// <summary>
+    /// Apply on laptop devices (laptops, 992px and up).
+    /// </summary>
+    public TextOverflowBuilder OnLaptop => ChainWithBreakpoint(Breakpoint.Laptop);
+
+    /// <summary>
+    /// Apply on desktop devices (desktops, 1200px and up).
+    /// </summary>
+    public TextOverflowBuilder OnDesktop => ChainWithBreakpoint(Breakpoint.Desktop);
+
+    /// <summary>
+    /// Apply on wide screen devices (larger desktops, 1400px and up).
+    /// </summary>
+    public TextOverflowBuilder OnWideScreen => ChainWithBreakpoint(Breakpoint.ExtraExtraLarge);
+
+    private TextOverflowBuilder ChainWithTextOverflow(TextOverflowEnum textOverflow)
+    {
+        var newRules = new List<TextOverflowRule>(_rules) { new TextOverflowRule(textOverflow, null) };
+        return new TextOverflowBuilder(newRules);
+    }
+
+    private TextOverflowBuilder ChainWithBreakpoint(Breakpoint breakpoint)
+    {
+        TextOverflowRule? lastRule = _rules.LastOrDefault();
+        if (lastRule == null)
+            return new TextOverflowBuilder(TextOverflowEnum.Clip, breakpoint);
+
+        var newRules = new List<TextOverflowRule>(_rules);
+        // Update the last rule with the new breakpoint
+        newRules[newRules.Count - 1] = new TextOverflowRule(lastRule.TextOverflow, breakpoint);
+        return new TextOverflowBuilder(newRules);
+    }
+
+    /// <summary>
+    /// Gets the CSS class string for the current configuration.
+    /// </summary>
+    public string ToClass()
+    {
+        if (_rules.Count == 0)
+            return string.Empty;
+
+        var classes = new List<string>(_rules.Count);
+
+        foreach (TextOverflowRule rule in _rules)
+        {
+            string textOverflowClass = GetTextOverflowClass(rule.TextOverflow);
+            string breakpointClass = GetBreakpointClass(rule.Breakpoint);
+
+            if (textOverflowClass.HasContent())
+            {
+                string className = textOverflowClass;
+                if (breakpointClass.HasContent())
+                    className = $"{breakpointClass}-{className}";
+
+                classes.Add(className);
+            }
+        }
+
+        return string.Join(" ", classes);
+    }
+
+    /// <summary>
+    /// Gets the CSS style string for the current configuration.
+    /// </summary>
+    public string ToStyle()
+    {
+        if (_rules.Count == 0)
+            return string.Empty;
+
+        var styles = new List<string>(_rules.Count);
+
+        foreach (TextOverflowRule rule in _rules)
+        {
+            if (rule.TextOverflow.Value.HasContent())
+            {
+                styles.Add($"text-overflow: {rule.TextOverflow.Value}");
+            }
+        }
+
+        return string.Join("; ", styles);
+    }
+
+    private static string GetTextOverflowClass(TextOverflowEnum textOverflow)
+    {
+        return textOverflow.Value switch
+        {
+            "clip" => "text-truncate", // Bootstrap uses text-truncate for ellipsis, but we'll use it for clip too
+            "ellipsis" => "text-truncate",
+            "inherit" => string.Empty, // No Bootstrap class for inherit
+            "initial" => string.Empty, // No Bootstrap class for initial
+            "revert" => string.Empty, // No Bootstrap class for revert
+            "revert-layer" => string.Empty, // No Bootstrap class for revert-layer
+            "unset" => string.Empty, // No Bootstrap class for unset
+            _ => string.Empty
+        };
+    }
+
+    private static string GetBreakpointClass(Breakpoint? breakpoint)
+    {
+        if (breakpoint == null) return string.Empty;
+
+        return breakpoint.Value switch
+        {
+            "phone" or "xs" => string.Empty, // xs is default, no prefix needed
+            "mobile" or "sm" => "sm",
+            "tablet" or "md" => "md",
+            "laptop" or "lg" => "lg",
+            "desktop" or "xl" => "xl",
+            "xxl" => "xxl",
+            _ => string.Empty
+        };
+    }
+}
