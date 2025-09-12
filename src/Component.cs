@@ -146,7 +146,7 @@ public abstract class Component : ComponentBase, IDisposable, IAsyncDisposable
             attributes["style"] = AppendToStyle(attributes.GetValueOrDefault("style")
                     ?.ToString(), $"box-shadow: {BoxShadow.Value}");
 
-        if (Margin.HasValue && !Margin.Value.IsEmpty)
+        if (Margin is { IsEmpty: false })
         {
             CssValue<MarginBuilder> marginValue = Margin.Value;
             
@@ -162,7 +162,7 @@ public abstract class Component : ComponentBase, IDisposable, IAsyncDisposable
             }
         }
 
-        if (Padding.HasValue && !Padding.Value.IsEmpty)
+        if (Padding is { IsEmpty: false })
         {
             CssValue<PaddingBuilder> paddingValue = Padding.Value;
             
@@ -177,6 +177,32 @@ public abstract class Component : ComponentBase, IDisposable, IAsyncDisposable
                         ?.ToString(), paddingValue.ToString());
             }
         }
+
+        // Add event callbacks
+        if (OnClick.HasDelegate)
+            attributes["onclick"] = EventCallback.Factory.Create<MouseEventArgs>(this, HandleClick);
+
+        if (OnDoubleClick.HasDelegate)
+            attributes["ondblclick"] = EventCallback.Factory.Create<MouseEventArgs>(this, HandleDoubleClick);
+
+        if (OnMouseOver.HasDelegate)
+            attributes["onmouseover"] = EventCallback.Factory.Create<MouseEventArgs>(this, HandleMouseOver);
+
+        if (OnMouseOut.HasDelegate)
+            attributes["onmouseout"] = EventCallback.Factory.Create<MouseEventArgs>(this, HandleMouseOut);
+
+        if (OnKeyDown.HasDelegate)
+            attributes["onkeydown"] = EventCallback.Factory.Create<KeyboardEventArgs>(this, HandleKeyDown);
+
+        if (OnFocus.HasDelegate)
+            attributes["onfocus"] = EventCallback.Factory.Create<FocusEventArgs>(this, HandleFocus);
+
+        if (OnBlur.HasDelegate)
+            attributes["onblur"] = EventCallback.Factory.Create<FocusEventArgs>(this, HandleBlur);
+
+        // Add element reference
+        if (ElementRef.Id != null)
+            attributes["@ref"] = ElementRef;
 
         if (Attributes != null)
         {

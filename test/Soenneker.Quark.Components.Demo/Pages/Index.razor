@@ -1,18 +1,69 @@
 ﻿@page "/"
-@using Microsoft.Extensions.Logging
+@using Soenneker.Quark.Components.Demo.Components
 
-@inject ILogger<Index> Logger
+<PageTitle>Quark Components Demo</PageTitle>
 
 <img src="https://user-images.githubusercontent.com/4441470/224455560-91ed3ee7-f510-4041-a8d2-3fc093025112.png" />
-<h1>Soenneker.Quark.Components demo</h1>
-<p>This page demonstrates some of the common usages for the interop library.</p>
-<br />
+<h1>Soenneker.Quark.Components Demo</h1>
+<p>This page demonstrates the Quark Components library using a custom DemoDiv component.</p>
 
-<hr />
+<DemoDiv Id="demo-div" Class="demo-class" Style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+    <h2>DemoDiv Component</h2>
+</DemoDiv>
 
-@code{
+<DemoDiv OnClick="@HandleClick" Style="background-color: #e1f5fe; padding: 15px; border-radius: 8px; cursor: pointer; text-align: center; border: 2px solid #0277bd;">
+    <strong>Click me!</strong>
+    <p>Click count: @clickCount</p>
+</DemoDiv>
 
-    protected override void OnInitialized()
+<DemoDiv OnMouseOver="@HandleMouseOver" OnMouseOut="@HandleMouseOut" 
+         Style="@($"background-color: {mouseOverColor}; padding: 15px; border-radius: 8px; cursor: pointer; text-align: center; border: 2px solid #7b1fa2; transition: background-color 0.3s;")">
+    <strong>Hover over me!</strong>
+    <p>Mouse over count: @mouseOverCount</p>
+</DemoDiv>
+
+<DemoDiv TabIndex="0" OnFocus="@HandleFocus" OnBlur="@HandleBlur" 
+         Style="@($"background-color: {focusColor}; padding: 15px; border-radius: 8px; text-align: center; border: 2px solid #388e3c; outline: none;")">
+    <strong>Focus me! (Tab to focus)</strong>
+    <p>Focus count: @focusCount</p>
+</DemoDiv>
+
+@code {
+    private int clickCount = 0;
+    private int mouseOverCount = 0;
+    private int focusCount = 0;
+    private string mouseOverColor = "#e1f5fe";
+    private string focusColor = "#e8f5e8";
+
+    private async Task HandleClick(MouseEventArgs args)
     {
+        clickCount++;
+        await Task.CompletedTask;
+    }
+
+    private async Task HandleMouseOver(MouseEventArgs args)
+    {
+        mouseOverCount++;
+        mouseOverColor = "#ffecb3";
+        await Task.CompletedTask;
+    }
+
+    private async Task HandleMouseOut(MouseEventArgs args)
+    {
+        mouseOverColor = "#e1f5fe";
+        await Task.CompletedTask;
+    }
+
+    private async Task HandleFocus(FocusEventArgs args)
+    {
+        focusCount++;
+        focusColor = "#c8e6c9";
+        await Task.CompletedTask;
+    }
+
+    private async Task HandleBlur(FocusEventArgs args)
+    {
+        focusColor = "#e8f5e8";
+        await Task.CompletedTask;
     }
 }
