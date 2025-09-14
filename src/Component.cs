@@ -200,10 +200,6 @@ public abstract class Component : ComponentBase, IDisposable, IAsyncDisposable
         if (OnBlur.HasDelegate)
             attributes["onblur"] = EventCallback.Factory.Create<FocusEventArgs>(this, HandleBlur);
 
-        // Add element reference
-        if (ElementRef.Id != null)
-            attributes["@ref"] = ElementRef;
-
         if (Attributes != null)
         {
             foreach (KeyValuePair<string, object> attribute in Attributes)
