@@ -48,7 +48,7 @@
         <PackageReference Include="Soenneker.Quark.Enums.DisplayTypes" Version="3.0.3" />
         <PackageReference Include="Soenneker.Quark.Enums.ElementSides" Version="3.0.2" />
         <PackageReference Include="Soenneker.Quark.Enums.Floats" Version="3.0.2" />
-        <PackageReference Include="Soenneker.Quark.Enums.Shadows" Version="3.0.2" />
+        <PackageReference Include="Soenneker.Quark.Enums.Shadows" Version="3.0.3" />
         <PackageReference Include="Soenneker.Quark.Enums.TextOverflows" Version="3.0.1" />
         <PackageReference Include="Soenneker.Quark.Enums.VerticalAligns" Version="3.0.1" />
         <PackageReference Include="Soenneker.Quark.Enums.Visibilities" Version="3.0.1" />
