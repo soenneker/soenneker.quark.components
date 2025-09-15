@@ -1,3 +1,4 @@
+using Soenneker.Quark.Enums.GlobalKeywords;
 using TextOverflowEnum = Soenneker.Quark.Enums.TextOverflows.TextOverflow;
 
 namespace Soenneker.Quark.Components.TextOverflow;
@@ -20,25 +21,25 @@ public static class TextOverflowUtility
     /// <summary>
     /// The element inherits the text-overflow value from its parent element.
     /// </summary>
-    public static TextOverflowBuilder Inherit => new(TextOverflowEnum.Inherit);
+    public static TextOverflowBuilder Inherit => new(GlobalKeyword.Inherit);
 
     /// <summary>
     /// The element resets the text-overflow property to its initial value.
     /// </summary>
-    public static TextOverflowBuilder Initial => new(TextOverflowEnum.Initial);
+    public static TextOverflowBuilder Initial => new(GlobalKeyword.Initial);
 
     /// <summary>
     /// The element resets the text-overflow property to the value established by the user agent's default stylesheet.
     /// </summary>
-    public static TextOverflowBuilder Revert => new(TextOverflowEnum.Revert);
+    public static TextOverflowBuilder Revert => new(GlobalKeyword.Revert);
 
     /// <summary>
     /// The element resets the text-overflow property to the value established by the user agent's default stylesheet for the current element.
     /// </summary>
-    public static TextOverflowBuilder RevertLayer => new(TextOverflowEnum.RevertLayer);
+    public static TextOverflowBuilder RevertLayer => new(GlobalKeyword.RevertLayer);
 
     /// <summary>
     /// The element resets the text-overflow property to its inherited value if it inherits, or to its initial value if it doesn't.
     /// </summary>
-    public static TextOverflowBuilder Unset => new(TextOverflowEnum.Unset);
+    public static TextOverflowBuilder Unset => new(GlobalKeyword.Unset);
 }

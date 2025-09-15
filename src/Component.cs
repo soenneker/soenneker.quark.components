@@ -1,18 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Soenneker.Blazor.Extensions.EventCallback;
 using Soenneker.Extensions.String;
 using Soenneker.Quark.Components.Common;
+using Soenneker.Quark.Components.Height;
 using Soenneker.Quark.Components.Margin;
+using Soenneker.Quark.Components.ObjectFit;
+using Soenneker.Quark.Components.Overflow;
 using Soenneker.Quark.Components.Padding;
+using Soenneker.Quark.Components.Position;
+using Soenneker.Quark.Components.TextSize;
+using Soenneker.Quark.Components.Width;
+using Soenneker.Quark.Dtos.Colors;
 using Soenneker.Quark.Enums.DisplayTypes;
 using Soenneker.Quark.Enums.Floats;
 using Soenneker.Quark.Enums.Shadows;
+using Soenneker.Quark.Enums.TextAlignments;
+using Soenneker.Quark.Enums.TextDecorations.Line;
 using Soenneker.Quark.Enums.VerticalAligns;
 using Soenneker.Quark.Enums.Visibilities;
+using Soenneker.Utils.PooledStringBuilders;
 
 namespace Soenneker.Quark.Components;
 
@@ -67,6 +78,30 @@ public abstract class Component : ComponentBase, IDisposable, IAsyncDisposable
     public CssValue<PaddingBuilder>? Padding { get; set; }
 
     [Parameter]
+    public CssValue<PositionBuilder>? Position { get; set; }
+
+    [Parameter]
+    public CssValue<TextSizeBuilder>? TextSize { get; set; }
+
+    [Parameter]
+    public CssValue<WidthBuilder>? Width { get; set; }
+
+    [Parameter]
+    public CssValue<HeightBuilder>? Height { get; set; }
+
+    [Parameter]
+    public CssValue<OverflowBuilder>? Overflow { get; set; }
+
+    [Parameter]
+    public CssValue<ObjectFitBuilder>? ObjectFit { get; set; }
+
+    [Parameter]
+    public TextAlignment? TextAlignment { get; set; }
+
+    [Parameter]
+    public TextDecorationLine? TextDecorationLine { get; set; }
+
+    [Parameter]
     public EventCallback<MouseEventArgs> OnClick { get; set; }
 
     [Parameter]
@@ -88,179 +123,174 @@ public abstract class Component : ComponentBase, IDisposable, IAsyncDisposable
     public EventCallback<FocusEventArgs> OnBlur { get; set; }
 
     [Parameter]
-    public ElementReference ElementRef { get; set; }
-
-    [Parameter]
-    public Action<ElementReference>? ElementRefChanged { get; set; }
+    public EventCallback<ElementReference> OnElementRefReady { get; set; }
 
     [Parameter(CaptureUnmatchedValues = true)]
     public Dictionary<string, object>? Attributes { get; set; }
 
-    protected bool Disposed => _disposed;
+    [Parameter]
+    public Color TextColor { get; set; }
 
+    [Parameter]
+    public string? Role { get; set; }
+
+    [Parameter]
+    public string? AriaLabel { get; set; }
+
+    [Parameter]
+    public string? AriaDescribedBy { get; set; }
+
+    protected ElementReference ElementRef { get; set; }
+
+    protected bool Disposed => _disposed;
     protected bool AsyncDisposed => _asyncDisposed;
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && OnElementRefReady.HasDelegate)
+            return OnElementRefReady.InvokeAsync(ElementRef);
+        return Task.CompletedTask;
+    }
 
     protected virtual Dictionary<string, object> BuildAttributes()
     {
-        var attributes = new Dictionary<string, object>();
+        int guess = 14 + (Attributes?.Count ?? 0);
+        var attrs = new Dictionary<string, object>(guess);
 
-        if (!Id.IsNullOrEmpty())
-            attributes["id"] = Id;
+        // NOT 'using var' – we need to pass by ref into helpers.
+        var cls = new PooledStringBuilder(64);
+        var sty = new PooledStringBuilder(128);
 
-        if (!Class.IsNullOrEmpty())
-            attributes["class"] = Class;
-
-        if (!Style.IsNullOrEmpty())
-            attributes["style"] = Style;
-
-        if (!Title.IsNullOrEmpty())
-            attributes["title"] = Title;
-
-        if (TabIndex.HasValue)
-            attributes["tabindex"] = TabIndex.Value;
-
-        if (Hidden)
-            attributes["hidden"] = true;
-
-        if (Display != null)
-            attributes["style"] = AppendToStyle(attributes.GetValueOrDefault("style")
-                    ?.ToString(), $"display: {Display.Value}");
-
-        if (Visibility != null)
-            attributes["style"] = AppendToStyle(attributes.GetValueOrDefault("style")
-                    ?.ToString(), $"visibility: {Visibility.Value}");
-
-        if (Float != null)
-            attributes["style"] = AppendToStyle(attributes.GetValueOrDefault("style")
-                    ?.ToString(), $"float: {Float.Value}");
-
-        if (VerticalAlign != null)
-            attributes["style"] = AppendToStyle(attributes.GetValueOrDefault("style")
-                    ?.ToString(), $"vertical-align: {VerticalAlign.Value}");
-
-        if (TextOverflow != null)
-            attributes["style"] = AppendToStyle(attributes.GetValueOrDefault("style")
-                    ?.ToString(), $"text-overflow: {TextOverflow.Value}");
-
-        if (BoxShadow != null)
-            attributes["style"] = AppendToStyle(attributes.GetValueOrDefault("style")
-                    ?.ToString(), $"box-shadow: {BoxShadow.Value}");
-
-        if (Margin is { IsEmpty: false })
+        try
         {
-            CssValue<MarginBuilder> marginValue = Margin.Value;
-            
-            if (marginValue.IsCssStyle)
+            if (!Class.IsNullOrEmpty()) cls.Append(Class!);
+            if (!Style.IsNullOrEmpty()) sty.Append(Style!);
+
+            // Simple/static attributes
+            if (!Id.IsNullOrEmpty()) attrs["id"] = Id!;
+            if (!Title.IsNullOrEmpty()) attrs["title"] = Title!;
+            if (TabIndex.HasValue) attrs["tabindex"] = TabIndex.Value;
+            if (Hidden) attrs["hidden"] = true;
+            if (!Role.IsNullOrEmpty()) attrs["role"] = Role!;
+            if (!AriaLabel.IsNullOrEmpty()) attrs["aria-label"] = AriaLabel!;
+            if (!AriaDescribedBy.IsNullOrEmpty()) attrs["aria-describedby"] = AriaDescribedBy!;
+
+            // Inline style enums
+            if (Display != null) AppendStyleDecl(ref sty, "display: ", Display.Value);
+            if (Visibility != null) AppendStyleDecl(ref sty, "visibility: ", Visibility.Value);
+            if (Float != null) AppendStyleDecl(ref sty, "float: ", Float.Value);
+            if (VerticalAlign != null) AppendStyleDecl(ref sty, "vertical-align: ", VerticalAlign.Value);
+            if (TextOverflow != null) AppendStyleDecl(ref sty, "text-overflow: ", TextOverflow.Value);
+            if (BoxShadow != null) AppendStyleDecl(ref sty, "box-shadow: ", BoxShadow.Value);
+            if (TextAlignment != null) AppendStyleDecl(ref sty, "text-align: ", TextAlignment.Value);
+            if (TextDecorationLine != null) AppendStyleDecl(ref sty, "text-decoration-line: ", TextDecorationLine.Value);
+
+            // CssValue<> properties
+            AddCss(ref sty, ref cls, Margin);
+            AddCss(ref sty, ref cls, Padding);
+            AddCss(ref sty, ref cls, Position);
+            AddCss(ref sty, ref cls, TextSize);
+            AddCss(ref sty, ref cls, Width);
+            AddCss(ref sty, ref cls, Height);
+            AddCss(ref sty, ref cls, Overflow);
+            AddCss(ref sty, ref cls, ObjectFit);
+
+            // Events — assign callbacks directly (no Factory.Create allocations)
+            if (OnClick.HasDelegate) attrs["onclick"] = OnClick;
+            if (OnDoubleClick.HasDelegate) attrs["ondblclick"] = OnDoubleClick;
+            if (OnMouseOver.HasDelegate) attrs["onmouseover"] = OnMouseOver;
+            if (OnMouseOut.HasDelegate) attrs["onmouseout"] = OnMouseOut;
+            if (OnKeyDown.HasDelegate) attrs["onkeydown"] = OnKeyDown;
+            if (OnFocus.HasDelegate) attrs["onfocus"] = OnFocus;
+            if (OnBlur.HasDelegate) attrs["onblur"] = OnBlur;
+
+            if (cls.Length > 0) attrs["class"] = cls.ToString();
+            if (sty.Length > 0) attrs["style"] = sty.ToString();
+
+            // Merge user attributes last (allow overrides)
+            if (Attributes != null)
             {
-                attributes["style"] = AppendToStyle(attributes.GetValueOrDefault("style")
-                        ?.ToString(), marginValue.ToString());
+                foreach (KeyValuePair<string, object> kv in Attributes)
+                    attrs[kv.Key] = kv.Value;
             }
-            else
-            {
-                attributes["class"] = AppendToClass(attributes.GetValueOrDefault("class")
-                        ?.ToString(), marginValue.ToString());
-            }
+
+            return attrs;
+        }
+        finally
+        {
+            sty.Dispose();
+            cls.Dispose();
+        }
+    }
+
+    // ---- helpers (static; pass builders by ref; NO lambdas/delegates capturing ref structs) ----
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void AppendClass(ref PooledStringBuilder b, string s)
+    {
+        if (s.IsNullOrEmpty()) 
+            return;
+
+        if (b.Length != 0)
+            b.Append(' ');
+
+        b.Append(s);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void AppendStyleDecl(ref PooledStringBuilder b, string nameColonSpace, object value)
+    {
+        if (b.Length != 0)
+        {
+            b.Append(';');
+            b.Append(' ');
         }
 
-        if (Padding is { IsEmpty: false })
+        b.Append(nameColonSpace);
+        b.Append(value.ToString()!);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void AppendStyleDecl(ref PooledStringBuilder b, string fullDecl)
+    {
+        if (fullDecl.IsNullOrEmpty()) 
+            return;
+
+        if (b.Length != 0)
         {
-            CssValue<PaddingBuilder> paddingValue = Padding.Value;
-            
-            if (paddingValue.IsCssStyle)
-            {
-                attributes["style"] = AppendToStyle(attributes.GetValueOrDefault("style")
-                        ?.ToString(), paddingValue.ToString());
-            }
-            else
-            {
-                attributes["class"] = AppendToClass(attributes.GetValueOrDefault("class")
-                        ?.ToString(), paddingValue.ToString());
-            }
+            b.Append(';');
+            b.Append(' ');
         }
 
-        // Add event callbacks
-        if (OnClick.HasDelegate)
-            attributes["onclick"] = EventCallback.Factory.Create<MouseEventArgs>(this, HandleClick);
+        b.Append(fullDecl);
+    }
 
-        if (OnDoubleClick.HasDelegate)
-            attributes["ondblclick"] = EventCallback.Factory.Create<MouseEventArgs>(this, HandleDoubleClick);
-
-        if (OnMouseOver.HasDelegate)
-            attributes["onmouseover"] = EventCallback.Factory.Create<MouseEventArgs>(this, HandleMouseOver);
-
-        if (OnMouseOut.HasDelegate)
-            attributes["onmouseout"] = EventCallback.Factory.Create<MouseEventArgs>(this, HandleMouseOut);
-
-        if (OnKeyDown.HasDelegate)
-            attributes["onkeydown"] = EventCallback.Factory.Create<KeyboardEventArgs>(this, HandleKeyDown);
-
-        if (OnFocus.HasDelegate)
-            attributes["onfocus"] = EventCallback.Factory.Create<FocusEventArgs>(this, HandleFocus);
-
-        if (OnBlur.HasDelegate)
-            attributes["onblur"] = EventCallback.Factory.Create<FocusEventArgs>(this, HandleBlur);
-
-        if (Attributes != null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void AddCss<T>(ref PooledStringBuilder styB, ref PooledStringBuilder clsB, CssValue<T>? v) where T : class, ICssBuilder
+    {
+        if (v is { IsEmpty: false })
         {
-            foreach (KeyValuePair<string, object> attribute in Attributes)
-            {
-                attributes[attribute.Key] = attribute.Value;
-            }
+            var s = v.Value.ToString();
+
+            if (s.Length == 0)
+                return;
+
+            if (v.Value.IsCssStyle) 
+                AppendStyleDecl(ref styB, s);
+            else 
+                AppendClass(ref clsB, s);
         }
-
-        return attributes;
     }
 
-    protected virtual string AppendToStyle(string? existingStyle, string newStyle)
-    {
-        if (existingStyle.IsNullOrEmpty())
-            return newStyle;
+    // -------------------------------------------------------------------------------------------
 
-        return $"{existingStyle}; {newStyle}";
-    }
-
-    protected virtual string AppendToClass(string? existingClass, string newClass)
-    {
-        if (existingClass.IsNullOrEmpty())
-            return newClass;
-
-        return $"{existingClass} {newClass}";
-    }
-
-    protected virtual async Task HandleClick(MouseEventArgs args)
-    {
-        await OnClick.InvokeIfHasDelegate(args);
-    }
-
-    protected virtual async Task HandleDoubleClick(MouseEventArgs args)
-    {
-        await OnDoubleClick.InvokeIfHasDelegate(args);
-    }
-
-    protected virtual async Task HandleKeyDown(KeyboardEventArgs args)
-    {
-        await OnKeyDown.InvokeIfHasDelegate(args);
-    }
-
-    protected virtual async Task HandleFocus(FocusEventArgs args)
-    {
-        await OnFocus.InvokeIfHasDelegate(args);
-    }
-
-    protected virtual async Task HandleMouseOver(MouseEventArgs args)
-    {
-        await OnMouseOver.InvokeIfHasDelegate(args);
-    }
-
-    protected virtual async Task HandleMouseOut(MouseEventArgs args)
-    {
-        await OnMouseOut.InvokeIfHasDelegate(args);
-    }
-
-    protected virtual async Task HandleBlur(FocusEventArgs args)
-    {
-        await OnBlur.InvokeIfHasDelegate(args);
-    }
+    protected virtual Task HandleClick(MouseEventArgs e) => OnClick.InvokeIfHasDelegate(e);
+    protected virtual Task HandleDoubleClick(MouseEventArgs e) => OnDoubleClick.InvokeIfHasDelegate(e);
+    protected virtual Task HandleMouseOver(MouseEventArgs e) => OnMouseOver.InvokeIfHasDelegate(e);
+    protected virtual Task HandleMouseOut(MouseEventArgs e) => OnMouseOut.InvokeIfHasDelegate(e);
+    protected virtual Task HandleKeyDown(KeyboardEventArgs e) => OnKeyDown.InvokeIfHasDelegate(e);
+    protected virtual Task HandleFocus(FocusEventArgs e) => OnFocus.InvokeIfHasDelegate(e);
+    protected virtual Task HandleBlur(FocusEventArgs e) => OnBlur.InvokeIfHasDelegate(e);
 
     public void Dispose()
     {
@@ -284,23 +314,18 @@ public abstract class Component : ComponentBase, IDisposable, IAsyncDisposable
         }
     }
 
-    protected virtual ValueTask DisposeAsync(bool disposing)
+    protected virtual async ValueTask DisposeAsync(bool disposing)
     {
         if (!_asyncDisposed && disposing)
         {
-            OnDisposeAsync();
+            await OnDisposeAsync();
             _asyncDisposed = true;
         }
-
-        return ValueTask.CompletedTask;
     }
 
     protected virtual void OnDispose()
     {
     }
 
-    protected virtual Task OnDisposeAsync()
-    {
-        return Task.CompletedTask;
-    }
+    protected virtual Task OnDisposeAsync() => Task.CompletedTask;
 }

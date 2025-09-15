@@ -239,8 +239,8 @@ public sealed class PaddingBuilder : ICssBuilder
             else if (sideValue.Contains(";"))
             {
                 // Handle horizontal/vertical cases that need multiple properties
-                var parts = sideValue.Split(';');
-                foreach (var part in parts)
+                string[] parts = sideValue.Split(';');
+                foreach (string part in parts)
                 {
                     if (part.HasContent())
                     {

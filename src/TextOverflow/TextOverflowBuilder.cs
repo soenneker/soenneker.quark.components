@@ -3,6 +3,7 @@ using System.Linq;
 using Soenneker.Extensions.String;
 using Soenneker.Quark.Components.Common;
 using Soenneker.Quark.Enums.Breakpoints;
+using Soenneker.Quark.Enums.GlobalKeywords;
 using TextOverflowEnum = Soenneker.Quark.Enums.TextOverflows.TextOverflow;
 
 namespace Soenneker.Quark.Components.TextOverflow;
@@ -37,27 +38,27 @@ public sealed class TextOverflowBuilder : ICssBuilder
     /// <summary>
     /// Chain with inherit text overflow for the next rule.
     /// </summary>
-    public TextOverflowBuilder Inherit => ChainWithTextOverflow(TextOverflowEnum.Inherit);
+    public TextOverflowBuilder Inherit => ChainWithTextOverflow(GlobalKeyword.Inherit);
 
     /// <summary>
     /// Chain with initial text overflow for the next rule.
     /// </summary>
-    public TextOverflowBuilder Initial => ChainWithTextOverflow(TextOverflowEnum.Initial);
+    public TextOverflowBuilder Initial => ChainWithTextOverflow(GlobalKeyword.Initial);
 
     /// <summary>
     /// Chain with revert text overflow for the next rule.
     /// </summary>
-    public TextOverflowBuilder Revert => ChainWithTextOverflow(TextOverflowEnum.Revert);
+    public TextOverflowBuilder Revert => ChainWithTextOverflow(GlobalKeyword.Revert);
 
     /// <summary>
     /// Chain with revert-layer text overflow for the next rule.
     /// </summary>
-    public TextOverflowBuilder RevertLayer => ChainWithTextOverflow(TextOverflowEnum.RevertLayer);
+    public TextOverflowBuilder RevertLayer => ChainWithTextOverflow(GlobalKeyword.RevertLayer);
 
     /// <summary>
     /// Chain with unset text overflow for the next rule.
     /// </summary>
-    public TextOverflowBuilder Unset => ChainWithTextOverflow(TextOverflowEnum.Unset);
+    public TextOverflowBuilder Unset => ChainWithTextOverflow(GlobalKeyword.Unset);
 
     /// <summary>
     /// Apply on phone devices (portrait phones, less than 576px).
