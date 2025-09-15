@@ -159,17 +159,15 @@ public sealed class TextOverflowBuilder : ICssBuilder
 
     private static string GetTextOverflowClass(TextOverflowEnum textOverflow)
     {
-        return textOverflow.Value switch
+        switch (textOverflow)
         {
-            "clip" => "text-truncate", // Bootstrap uses text-truncate for ellipsis, but we'll use it for clip too
-            "ellipsis" => "text-truncate",
-            "inherit" => string.Empty, // No Bootstrap class for inherit
-            "initial" => string.Empty, // No Bootstrap class for initial
-            "revert" => string.Empty, // No Bootstrap class for revert
-            "revert-layer" => string.Empty, // No Bootstrap class for revert-layer
-            "unset" => string.Empty, // No Bootstrap class for unset
-            _ => string.Empty
-        };
+            case TextOverflowEnum.ClipValue:
+                return "text-truncate";
+            case TextOverflowEnum.EllipsisValue:
+                return "text-truncate";
+            default:
+                return string.Empty;
+        }
     }
 
     private static string GetBreakpointClass(Breakpoint? breakpoint)

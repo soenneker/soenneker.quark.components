@@ -279,19 +279,31 @@ public sealed class MarginBuilder : ICssBuilder
 
     private static string GetSideClass(ElementSide side)
     {
-        return side.Value switch
+        switch (side)
         {
-            "all" => string.Empty,
-            "top" => "t",
-            "right" => "e",
-            "bottom" => "b",
-            "left" => "s",
-            "horizontal" or "left-right" => "x",
-            "vertical" or "top-bottom" => "y",
-            "inline-start" => "s",
-            "inline-end" => "e",
-            _ => string.Empty
-        };
+            case ElementSide.AllValue:
+                return string.Empty;
+            case ElementSide.TopValue:
+                return "t";
+            case ElementSide.RightValue:
+                return "e";
+            case ElementSide.BottomValue:
+                return "b";
+            case ElementSide.LeftValue:
+                return "s";
+            case ElementSide.HorizontalValue:
+            case ElementSide.LeftRightValue:
+                return "x";
+            case ElementSide.VerticalValue:
+            case ElementSide.TopBottomValue:
+                return "y";
+            case ElementSide.InlineStartValue:
+                return "s";
+            case ElementSide.InlineEndValue:
+                return "e";
+            default:
+                return string.Empty;
+        }
     }
 
     private static string? GetSizeValue(int size)
@@ -311,19 +323,31 @@ public sealed class MarginBuilder : ICssBuilder
 
     private static string GetSideValue(ElementSide side)
     {
-        return side.Value switch
+        switch (side)
         {
-            "all" => "all",
-            "top" => "top",
-            "right" => "right",
-            "bottom" => "bottom",
-            "left" => "left",
-            "horizontal" or "left-right" => "left; right",
-            "vertical" or "top-bottom" => "top; bottom",
-            "inline-start" => "inline-start",
-            "inline-end" => "inline-end",
-            _ => "all"
-        };
+            case ElementSide.AllValue:
+                return "all";
+            case ElementSide.TopValue:
+                return "top";
+            case ElementSide.RightValue:
+                return "right";
+            case ElementSide.BottomValue:
+                return "bottom";
+            case ElementSide.LeftValue:
+                return "left";
+            case ElementSide.HorizontalValue:
+            case ElementSide.LeftRightValue:
+                return "left; right";
+            case ElementSide.VerticalValue:
+            case ElementSide.TopBottomValue:
+                return "top; bottom";
+            case ElementSide.InlineStartValue:
+                return "inline-start";
+            case ElementSide.InlineEndValue:
+                return "inline-end";
+            default:
+                return "all";
+        }
     }
 
     private static string GetBreakpointClass(Breakpoint? breakpoint)
