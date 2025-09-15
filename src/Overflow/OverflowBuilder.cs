@@ -154,7 +154,16 @@ public sealed class OverflowBuilder : ICssBuilder
 
     private static string GetBreakpointClass(Breakpoint? breakpoint)
     {
-        if (breakpoint == null) return string.Empty;
+        if (breakpoint == null) 
+            return string.Empty;
+
+        switch (breakpoint)
+        {
+            case Breakpoint.PhoneValue:
+                return string.Empty;
+            case Breakpoint.MobileValue:
+                return "sm";
+        }
 
         return breakpoint.Value switch
         {

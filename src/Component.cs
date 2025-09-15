@@ -399,32 +399,26 @@ public abstract class Component : ComponentBase, Abstract.IComponent
 
     public void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        await DisposeAsync(true);
-        Dispose(false);
-        GC.SuppressFinalize(this);
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (Disposed.IsFalse && disposing)
+        // Run sync cleanup once
+        if (Disposed.TrySetTrue())
         {
             OnDispose();
-            Disposed.TrySetTrue();
         }
     }
 
-    protected virtual async ValueTask DisposeAsync(bool disposing)
+    public virtual async ValueTask DisposeAsync()
     {
-        if (AsyncDisposed.IsFalse && disposing)
+        // Run async cleanup once
+        if (AsyncDisposed.TrySetTrue())
         {
             await OnDisposeAsync();
-            AsyncDisposed.TrySetTrue();
+        }
+
+        // Ensure the sync hook also runs once (if it hasn't already)
+        if (Disposed.TrySetTrue())
+        {
+            // ReSharper disable once MethodHasAsyncOverload
+            OnDispose();
         }
     }
 

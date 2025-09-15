@@ -183,15 +183,27 @@ public sealed class GapBuilder : ICssBuilder
     {
         if (breakpoint == null) return string.Empty;
 
-        return breakpoint.Value switch
+        switch (breakpoint)
         {
-            "phone" or "xs" => string.Empty, // xs is default, no prefix needed
-            "mobile" or "sm" => "sm",
-            "tablet" or "md" => "md",
-            "laptop" or "lg" => "lg",
-            "desktop" or "xl" => "xl",
-            "xxl" => "xxl",
-            _ => string.Empty
-        };
+            case Breakpoint.PhoneValue:
+            case Breakpoint.ExtraSmallValue:
+                return string.Empty;
+            case Breakpoint.MobileValue:
+            case Breakpoint.SmallValue:
+                return "sm";
+            case Breakpoint.TabletValue:
+            case Breakpoint.MediumValue:
+                return "md";
+            case Breakpoint.LaptopValue:
+            case Breakpoint.LargeValue:
+                return "lg";
+            case Breakpoint.DesktopValue:
+            case Breakpoint.ExtraLargeValue:
+                return "xl";
+            case Breakpoint.ExtraExtraLargeValue:
+                return "xxl";
+            default:
+                return string.Empty;
+        }
     }
 }
