@@ -27,10 +27,8 @@ using Soenneker.Utils.PooledStringBuilders;
 
 namespace Soenneker.Quark.Components;
 
-/// <summary>
-/// Base component class that serves as the building block for all HTML elements in Quark.
-/// </summary>
-public abstract class Component : ComponentBase, IDisposable, IAsyncDisposable
+///<inheritdoc cref="Abstract.IComponent"/>
+public abstract class Component : ComponentBase, Abstract.IComponent
 {
     private bool _disposed;
     private bool _asyncDisposed;
@@ -143,12 +141,14 @@ public abstract class Component : ComponentBase, IDisposable, IAsyncDisposable
     protected ElementReference ElementRef { get; set; }
 
     protected bool Disposed => _disposed;
+
     protected bool AsyncDisposed => _asyncDisposed;
 
     protected override Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender && OnElementRefReady.HasDelegate)
             return OnElementRefReady.InvokeAsync(ElementRef);
+
         return Task.CompletedTask;
     }
 
@@ -223,8 +223,6 @@ public abstract class Component : ComponentBase, IDisposable, IAsyncDisposable
         }
     }
 
-    // ---- helpers (static; pass builders by ref; NO lambdas/delegates capturing ref structs) ----
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void AppendClass(ref PooledStringBuilder b, string s)
     {
@@ -281,8 +279,6 @@ public abstract class Component : ComponentBase, IDisposable, IAsyncDisposable
                 AppendClass(ref clsB, s);
         }
     }
-
-    // -------------------------------------------------------------------------------------------
 
     protected virtual Task HandleClick(MouseEventArgs e) => OnClick.InvokeIfHasDelegate(e);
     protected virtual Task HandleDoubleClick(MouseEventArgs e) => OnDoubleClick.InvokeIfHasDelegate(e);
