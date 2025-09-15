@@ -23,6 +23,7 @@ using Soenneker.Quark.Enums.TextAlignments;
 using Soenneker.Quark.Enums.TextDecorations.Line;
 using Soenneker.Quark.Enums.VerticalAligns;
 using Soenneker.Quark.Enums.Visibilities;
+using Soenneker.Utils.AtomicBool;
 using Soenneker.Utils.PooledStringBuilders;
 
 namespace Soenneker.Quark.Components;
@@ -30,8 +31,8 @@ namespace Soenneker.Quark.Components;
 ///<inheritdoc cref="Abstract.IComponent"/>
 public abstract class Component : ComponentBase, Abstract.IComponent
 {
-    private bool _disposed;
-    private bool _asyncDisposed;
+    protected readonly AtomicBool Disposed = new();
+    protected readonly AtomicBool AsyncDisposed = new();
 
     [Parameter]
     public string? Id { get; set; }
@@ -130,6 +131,9 @@ public abstract class Component : ComponentBase, Abstract.IComponent
     public Color TextColor { get; set; }
 
     [Parameter]
+    public Color BackgroundColor { get; set; }
+
+    [Parameter]
     public string? Role { get; set; }
 
     [Parameter]
@@ -139,10 +143,6 @@ public abstract class Component : ComponentBase, Abstract.IComponent
     public string? AriaDescribedBy { get; set; }
 
     protected ElementReference ElementRef { get; set; }
-
-    protected bool Disposed => _disposed;
-
-    protected bool AsyncDisposed => _asyncDisposed;
 
     protected override Task OnAfterRenderAsync(bool firstRender)
     {
@@ -157,16 +157,22 @@ public abstract class Component : ComponentBase, Abstract.IComponent
         int guess = 14 + (Attributes?.Count ?? 0);
         var attrs = new Dictionary<string, object>(guess);
 
-        // NOT 'using var' – we need to pass by ref into helpers.
         var cls = new PooledStringBuilder(64);
         var sty = new PooledStringBuilder(128);
+
+        bool userOnClick = false,
+            userOnDblClick = false,
+            userOnMouseOver = false,
+            userOnMouseOut = false,
+            userOnKeyDown = false,
+            userOnFocus = false,
+            userOnBlur = false;
 
         try
         {
             if (!Class.IsNullOrEmpty()) cls.Append(Class!);
             if (!Style.IsNullOrEmpty()) sty.Append(Style!);
 
-            // Simple/static attributes
             if (!Id.IsNullOrEmpty()) attrs["id"] = Id!;
             if (!Title.IsNullOrEmpty()) attrs["title"] = Title!;
             if (TabIndex.HasValue) attrs["tabindex"] = TabIndex.Value;
@@ -175,7 +181,6 @@ public abstract class Component : ComponentBase, Abstract.IComponent
             if (!AriaLabel.IsNullOrEmpty()) attrs["aria-label"] = AriaLabel!;
             if (!AriaDescribedBy.IsNullOrEmpty()) attrs["aria-describedby"] = AriaDescribedBy!;
 
-            // Inline style enums
             if (Display != null) AppendStyleDecl(ref sty, "display: ", Display.Value);
             if (Visibility != null) AppendStyleDecl(ref sty, "visibility: ", Visibility.Value);
             if (Float != null) AppendStyleDecl(ref sty, "float: ", Float.Value);
@@ -185,21 +190,30 @@ public abstract class Component : ComponentBase, Abstract.IComponent
             if (TextAlignment != null) AppendStyleDecl(ref sty, "text-align: ", TextAlignment.Value);
             if (TextDecorationLine != null) AppendStyleDecl(ref sty, "text-decoration-line: ", TextDecorationLine.Value);
 
-            // If it's a theme (e.g., Primary), emit a class like "text-primary"
-            string? textColorClass = TextColor.BuildClass("text");
-
-            if (textColorClass is not null)
-                AppendClass(ref cls, textColorClass);
-            else
             {
-                // Otherwise emit inline CSS like "color: #FFFFFF"
-                string? css = TextColor.CssValueOrNull();
-
-                if (!css.IsNullOrEmpty())
-                    AppendStyleDecl(ref sty, "color: ", css!);
+                string? textColorClass = TextColor.BuildClass("text");
+                if (textColorClass is not null)
+                    AppendClass(ref cls, textColorClass);
+                else
+                {
+                    string? css = TextColor.CssValueOrNull();
+                    if (!css.IsNullOrEmpty())
+                        AppendStyleDecl(ref sty, "color: ", css!);
+                }
             }
 
-            // CssValue<> properties
+            {
+                string? bgClass = BackgroundColor.BuildClass("bg");
+                if (bgClass is not null)
+                    AppendClass(ref cls, bgClass);
+                else
+                {
+                    string? css = BackgroundColor.CssValueOrNull();
+                    if (!css.IsNullOrEmpty())
+                        AppendStyleDecl(ref sty, "background-color: ", css!);
+                }
+            }
+
             AddCss(ref sty, ref cls, Margin);
             AddCss(ref sty, ref cls, Padding);
             AddCss(ref sty, ref cls, Position);
@@ -209,24 +223,95 @@ public abstract class Component : ComponentBase, Abstract.IComponent
             AddCss(ref sty, ref cls, Overflow);
             AddCss(ref sty, ref cls, ObjectFit);
 
-            // Events — assign callbacks directly (no Factory.Create allocations)
-            if (OnClick.HasDelegate) attrs["onclick"] = OnClick;
-            if (OnDoubleClick.HasDelegate) attrs["ondblclick"] = OnDoubleClick;
-            if (OnMouseOver.HasDelegate) attrs["onmouseover"] = OnMouseOver;
-            if (OnMouseOut.HasDelegate) attrs["onmouseout"] = OnMouseOut;
-            if (OnKeyDown.HasDelegate) attrs["onkeydown"] = OnKeyDown;
-            if (OnFocus.HasDelegate) attrs["onfocus"] = OnFocus;
-            if (OnBlur.HasDelegate) attrs["onblur"] = OnBlur;
+            if (Attributes is not null)
+            {
+                foreach (KeyValuePair<string, object> kv in Attributes)
+                {
+                    string keyLower = kv.Key?.ToLowerInvariant() ?? string.Empty;
+
+                    switch (keyLower)
+                    {
+                        case "class":
+                            AppendClass(ref cls, kv.Value?.ToString() ?? string.Empty);
+                            break;
+
+                        case "style":
+                            AppendStyleDecl(ref sty, kv.Value?.ToString() ?? string.Empty);
+                            break;
+
+                        case "onclick":
+                            userOnClick = true;
+                            if (kv.Value is EventCallback<MouseEventArgs> userClick && OnClick.HasDelegate)
+                                attrs["onclick"] = Compose(this, HandleClick, userClick);
+                            else
+                                attrs["onclick"] = kv.Value;
+                            break;
+
+                        case "ondblclick":
+                            userOnDblClick = true;
+                            if (kv.Value is EventCallback<MouseEventArgs> userDbl && OnDoubleClick.HasDelegate)
+                                attrs["ondblclick"] = Compose(this, HandleDoubleClick, userDbl);
+                            else
+                                attrs["ondblclick"] = kv.Value;
+                            break;
+
+                        case "onmouseover":
+                            userOnMouseOver = true;
+                            if (kv.Value is EventCallback<MouseEventArgs> userOver && OnMouseOver.HasDelegate)
+                                attrs["onmouseover"] = Compose(this, HandleMouseOver, userOver);
+                            else
+                                attrs["onmouseover"] = kv.Value;
+                            break;
+
+                        case "onmouseout":
+                            userOnMouseOut = true;
+                            if (kv.Value is EventCallback<MouseEventArgs> userOut && OnMouseOut.HasDelegate)
+                                attrs["onmouseout"] = Compose(this, HandleMouseOut, userOut);
+                            else
+                                attrs["onmouseout"] = kv.Value;
+                            break;
+
+                        case "onkeydown":
+                            userOnKeyDown = true;
+                            if (kv.Value is EventCallback<KeyboardEventArgs> userKey && OnKeyDown.HasDelegate)
+                                attrs["onkeydown"] = Compose(this, HandleKeyDown, userKey);
+                            else
+                                attrs["onkeydown"] = kv.Value;
+                            break;
+
+                        case "onfocus":
+                            userOnFocus = true;
+                            if (kv.Value is EventCallback<FocusEventArgs> userFocus && OnFocus.HasDelegate)
+                                attrs["onfocus"] = Compose(this, HandleFocus, userFocus);
+                            else
+                                attrs["onfocus"] = kv.Value;
+                            break;
+
+                        case "onblur":
+                            userOnBlur = true;
+                            if (kv.Value is EventCallback<FocusEventArgs> userBlur && OnBlur.HasDelegate)
+                                attrs["onblur"] = Compose(this, HandleBlur, userBlur);
+                            else
+                                attrs["onblur"] = kv.Value;
+                            break;
+
+                        default:
+                            attrs[kv.Key] = kv.Value;
+                            break;
+                    }
+                }
+            }
 
             if (cls.Length > 0) attrs["class"] = cls.ToString();
             if (sty.Length > 0) attrs["style"] = sty.ToString();
 
-            // Merge user attributes last (allow overrides)
-            if (Attributes != null)
-            {
-                foreach (KeyValuePair<string, object> kv in Attributes)
-                    attrs[kv.Key] = kv.Value;
-            }
+            if (!userOnClick && OnClick.HasDelegate) attrs["onclick"] = OnClick;
+            if (!userOnDblClick && OnDoubleClick.HasDelegate) attrs["ondblclick"] = OnDoubleClick;
+            if (!userOnMouseOver && OnMouseOver.HasDelegate) attrs["onmouseover"] = OnMouseOver;
+            if (!userOnMouseOut && OnMouseOut.HasDelegate) attrs["onmouseout"] = OnMouseOut;
+            if (!userOnKeyDown && OnKeyDown.HasDelegate) attrs["onkeydown"] = OnKeyDown;
+            if (!userOnFocus && OnFocus.HasDelegate) attrs["onfocus"] = OnFocus;
+            if (!userOnBlur && OnBlur.HasDelegate) attrs["onblur"] = OnBlur;
 
             return attrs;
         }
@@ -235,6 +320,16 @@ public abstract class Component : ComponentBase, Abstract.IComponent
             sty.Dispose();
             cls.Dispose();
         }
+    }
+
+    private static EventCallback<TArgs> Compose<TArgs>(ComponentBase owner, Func<TArgs, Task> ours, EventCallback<TArgs> users)
+    {
+        EventCallback<TArgs> usersCopy = users; // stabilize
+        return EventCallback.Factory.Create<TArgs>(owner, async e =>
+        {
+            await ours(e);
+            await usersCopy.InvokeAsync(e); // Since it's a user attribute we shouldn't check if it has a delegate, because that'd be unusual
+        });
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -317,19 +412,19 @@ public abstract class Component : ComponentBase, Abstract.IComponent
 
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposed && disposing)
+        if (Disposed.IsFalse && disposing)
         {
             OnDispose();
-            _disposed = true;
+            Disposed.TrySetTrue();
         }
     }
 
     protected virtual async ValueTask DisposeAsync(bool disposing)
     {
-        if (!_asyncDisposed && disposing)
+        if (AsyncDisposed.IsFalse && disposing)
         {
             await OnDisposeAsync();
-            _asyncDisposed = true;
+            AsyncDisposed.TrySetTrue();
         }
     }
 

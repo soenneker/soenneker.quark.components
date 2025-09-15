@@ -6,5 +6,3 @@ namespace Soenneker.Quark.Components.Overflow;
 /// Represents a single overflow rule with optional breakpoint.
 /// </summary>
 internal record OverflowRule(string Overflow, Breakpoint? Breakpoint = null);
-
-
