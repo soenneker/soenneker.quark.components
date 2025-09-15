@@ -185,6 +185,20 @@ public abstract class Component : ComponentBase, Abstract.IComponent
             if (TextAlignment != null) AppendStyleDecl(ref sty, "text-align: ", TextAlignment.Value);
             if (TextDecorationLine != null) AppendStyleDecl(ref sty, "text-decoration-line: ", TextDecorationLine.Value);
 
+            // If it's a theme (e.g., Primary), emit a class like "text-primary"
+            string? textColorClass = TextColor.BuildClass("text");
+
+            if (textColorClass is not null)
+                AppendClass(ref cls, textColorClass);
+            else
+            {
+                // Otherwise emit inline CSS like "color: #FFFFFF"
+                string? css = TextColor.CssValueOrNull();
+
+                if (!css.IsNullOrEmpty())
+                    AppendStyleDecl(ref sty, "color: ", css!);
+            }
+
             // CssValue<> properties
             AddCss(ref sty, ref cls, Margin);
             AddCss(ref sty, ref cls, Padding);
@@ -226,7 +240,7 @@ public abstract class Component : ComponentBase, Abstract.IComponent
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void AppendClass(ref PooledStringBuilder b, string s)
     {
-        if (s.IsNullOrEmpty()) 
+        if (s.IsNullOrEmpty())
             return;
 
         if (b.Length != 0)
@@ -251,7 +265,7 @@ public abstract class Component : ComponentBase, Abstract.IComponent
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void AppendStyleDecl(ref PooledStringBuilder b, string fullDecl)
     {
-        if (fullDecl.IsNullOrEmpty()) 
+        if (fullDecl.IsNullOrEmpty())
             return;
 
         if (b.Length != 0)
@@ -273,9 +287,9 @@ public abstract class Component : ComponentBase, Abstract.IComponent
             if (s.Length == 0)
                 return;
 
-            if (v.Value.IsCssStyle) 
+            if (v.Value.IsCssStyle)
                 AppendStyleDecl(ref styB, s);
-            else 
+            else
                 AppendClass(ref clsB, s);
         }
     }
