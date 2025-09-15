@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Soenneker.Extensions.String;
-using Soenneker.Quark.Components.Common;
+using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 
 namespace Soenneker.Quark.Components.Display;
@@ -143,9 +143,17 @@ public sealed class DisplayBuilder : ICssBuilder
 
             if (displayClass.HasContent())
             {
+                // Bootstrap order: d-{bp?}-{value}
                 string className = displayClass;
                 if (breakpointClass.HasContent())
-                    className = $"{breakpointClass}-{className}";
+                {
+                    // displayClass is like "d-flex"; insert the breakpoint after the prefix
+                    int dashIndex = className.IndexOf('-');
+                    if (dashIndex > 0)
+                        className = $"{className.Substring(0, dashIndex)}-{breakpointClass}{className.Substring(dashIndex)}";
+                    else
+                        className = $"{breakpointClass}-{className}";
+                }
 
                 classes.Add(className);
             }

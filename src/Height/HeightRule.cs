@@ -6,5 +6,3 @@ namespace Soenneker.Quark.Components.Height;
 /// Represents a single height rule with optional breakpoint.
 /// </summary>
 internal record HeightRule(string Size, Breakpoint? Breakpoint = null);
-
-

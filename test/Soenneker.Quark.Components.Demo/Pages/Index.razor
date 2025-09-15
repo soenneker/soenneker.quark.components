@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using Soenneker.Quark.Components.Demo.Components
+@using Soenneker.Quark.Components.Margin
 
 <PageTitle>Quark Components Demo</PageTitle>
 
@@ -13,57 +14,59 @@
 
 <DemoDiv OnClick="@HandleClick" Style="background-color: #e1f5fe; padding: 15px; border-radius: 8px; cursor: pointer; text-align: center; border: 2px solid #0277bd;">
     <strong>Click me!</strong>
-    <p>Click count: @clickCount</p>
+    <p>Click count: @_clickCount</p>
 </DemoDiv>
 
 <DemoDiv OnMouseOver="@HandleMouseOver" OnMouseOut="@HandleMouseOut" 
-         Style="@($"background-color: {mouseOverColor}; padding: 15px; border-radius: 8px; cursor: pointer; text-align: center; border: 2px solid #7b1fa2; transition: background-color 0.3s;")">
+         Style="@($"background-color: {_mouseOverColor}; padding: 15px; border-radius: 8px; cursor: pointer; text-align: center; border: 2px solid #7b1fa2; transition: background-color 0.3s;")">
     <strong>Hover over me!</strong>
-    <p>Mouse over count: @mouseOverCount</p>
+    <p>Mouse over count: @_mouseOverCount</p>
 </DemoDiv>
 
 <DemoDiv TabIndex="0" OnFocus="@HandleFocus" OnBlur="@HandleBlur" 
-         Style="@($"background-color: {focusColor}; padding: 15px; border-radius: 8px; text-align: center; border: 2px solid #388e3c; outline: none;")">
+         Style="@($"background-color: {_focusColor}; padding: 15px; border-radius: 8px; text-align: center; border: 2px solid #388e3c; outline: none;")">
     <strong>Focus me! (Tab to focus)</strong>
-    <p>Focus count: @focusCount</p>
+    <p>Focus count: @_focusCount</p>
 </DemoDiv>
 
+<DemoDiv Margin="Margin.S0.OnDesktop.S5.OnMobile.S5.OnPhone">Margin</DemoDiv>
+
 @code {
-    private int clickCount = 0;
-    private int mouseOverCount = 0;
-    private int focusCount = 0;
-    private string mouseOverColor = "#e1f5fe";
-    private string focusColor = "#e8f5e8";
+    private int _clickCount = 0;
+    private int _mouseOverCount = 0;
+    private int _focusCount = 0;
+    private string _mouseOverColor = "#e1f5fe";
+    private string _focusColor = "#e8f5e8";
 
     private async Task HandleClick(MouseEventArgs args)
     {
-        clickCount++;
+        _clickCount++;
         await Task.CompletedTask;
     }
 
     private async Task HandleMouseOver(MouseEventArgs args)
     {
-        mouseOverCount++;
-        mouseOverColor = "#ffecb3";
+        _mouseOverCount++;
+        _mouseOverColor = "#ffecb3";
         await Task.CompletedTask;
     }
 
     private async Task HandleMouseOut(MouseEventArgs args)
     {
-        mouseOverColor = "#e1f5fe";
+        _mouseOverColor = "#e1f5fe";
         await Task.CompletedTask;
     }
 
     private async Task HandleFocus(FocusEventArgs args)
     {
-        focusCount++;
-        focusColor = "#c8e6c9";
+        _focusCount++;
+        _focusColor = "#c8e6c9";
         await Task.CompletedTask;
     }
 
     private async Task HandleBlur(FocusEventArgs args)
     {
-        focusColor = "#e8f5e8";
+        _focusColor = "#e8f5e8";
         await Task.CompletedTask;
     }
 }

@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
-using Soenneker.Quark.Components.Common;
+using Soenneker.Quark.Components.Display;
 using Soenneker.Quark.Components.Height;
 using Soenneker.Quark.Components.Margin;
 using Soenneker.Quark.Components.ObjectFit;
@@ -13,13 +10,16 @@ using Soenneker.Quark.Components.Position;
 using Soenneker.Quark.Components.TextSize;
 using Soenneker.Quark.Components.Width;
 using Soenneker.Quark.Dtos.Colors;
-using Soenneker.Quark.Enums.DisplayTypes;
-using Soenneker.Quark.Enums.Floats;
-using Soenneker.Quark.Enums.Shadows;
 using Soenneker.Quark.Enums.TextAlignments;
-using Soenneker.Quark.Enums.TextDecorations.Line;
-using Soenneker.Quark.Enums.VerticalAligns;
-using Soenneker.Quark.Enums.Visibilities;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Soenneker.Quark.Components.Float;
+using Soenneker.Quark.Components.Shadow;
+using Soenneker.Quark.Components.TextDecoration;
+using Soenneker.Quark.Components.TextOverflow;
+using Soenneker.Quark.Components.VerticalAlign;
+using Soenneker.Quark.Components.Visibility;
 
 namespace Soenneker.Quark.Components.Abstract;
 
@@ -59,34 +59,26 @@ public interface IComponent : IDisposable, IAsyncDisposable
     bool Hidden { get; set; }
 
     /// <summary>
-    /// Gets or sets the CSS <c>display</c> value to apply inline (e.g., <c>block</c>, <c>inline</c>, <c>flex</c>).
-    /// </summary>
-    DisplayType? Display { get; set; }
-
-    /// <summary>
-    /// Gets or sets the CSS <c>visibility</c> value to apply inline.
-    /// </summary>
-    Visibility? Visibility { get; set; }
-
-    /// <summary>
-    /// Gets or sets the CSS <c>float</c> value to apply inline.
-    /// </summary>
-    Float? Float { get; set; }
-
-    /// <summary>
     /// Gets or sets the CSS <c>vertical-align</c> value to apply inline.
     /// </summary>
-    VerticalAlign? VerticalAlign { get; set; }
+    CssValue<VerticalAlignBuilder>? VerticalAlign { get; set; }
 
     /// <summary>
     /// Gets or sets the CSS <c>text-overflow</c> value to apply inline.
     /// </summary>
-    Enums.TextOverflows.TextOverflow? TextOverflow { get; set; }
+    CssValue<TextOverflowBuilder>? TextOverflow { get; set; }
 
     /// <summary>
     /// Gets or sets the CSS <c>box-shadow</c> value to apply inline.
     /// </summary>
-    Shadow? BoxShadow { get; set; }
+    CssValue<ShadowBuilder>? BoxShadow { get; set; }
+
+    CssValue<FloatBuilder>? Float { get; set; }
+
+    CssValue<DisplayBuilder>? Display { get; set; }
+
+
+    CssValue<VisibilityBuilder>? Visibility { get; set; }
 
     /// <summary>
     /// Gets or sets the margin configuration. Will emit either classes or inline style based on the builder.
@@ -136,7 +128,7 @@ public interface IComponent : IDisposable, IAsyncDisposable
     /// <summary>
     /// Gets or sets the CSS <c>text-decoration-line</c> value to apply inline.
     /// </summary>
-    TextDecorationLine? TextDecorationLine { get; set; }
+    CssValue<TextDecorationBuilder>? TextDecorationLine { get; set; }
 
     /// <summary>
     /// Invoked when the element is clicked.

@@ -1,15 +1,15 @@
 using System;
 using Soenneker.Extensions.String;
+using Soenneker.Quark.Components.Abstract;
 
-namespace Soenneker.Quark.Components.Common;
+namespace Soenneker.Quark.Components;
 
 /// <summary>
 /// Represents a CSS value that can be either a builder or a string.
 /// Provides implicit conversions for seamless usage.
 /// </summary>
 /// <typeparam name="TBuilder">The builder type that can generate CSS classes/styles</typeparam>
-public readonly struct CssValue<TBuilder> : IEquatable<CssValue<TBuilder>>
-    where TBuilder : class, ICssBuilder
+public readonly struct CssValue<TBuilder> : IEquatable<CssValue<TBuilder>> where TBuilder : class, ICssBuilder
 {
     private readonly string _value;
 

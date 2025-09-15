@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Soenneker.Blazor.Extensions.EventCallback;
 using Soenneker.Extensions.String;
-using Soenneker.Quark.Components.Common;
 using Soenneker.Quark.Components.Height;
 using Soenneker.Quark.Components.Margin;
 using Soenneker.Quark.Components.ObjectFit;
@@ -15,16 +14,33 @@ using Soenneker.Quark.Components.Padding;
 using Soenneker.Quark.Components.Position;
 using Soenneker.Quark.Components.TextSize;
 using Soenneker.Quark.Components.Width;
+using Soenneker.Quark.Components.Display;
+using Soenneker.Quark.Components.Flex;
+using Soenneker.Quark.Components.Gap;
+using Soenneker.Quark.Components.Border;
+using Soenneker.Quark.Components.TextOverflow;
+using Soenneker.Quark.Components.TextAlign;
+using Soenneker.Quark.Components.TextDecoration;
+using Soenneker.Quark.Components.VerticalAlign;
+using Soenneker.Quark.Components.Opacity;
+using Soenneker.Quark.Components.ZIndex;
+using Soenneker.Quark.Components.PointerEvents;
+using Soenneker.Quark.Components.UserSelect;
+using Soenneker.Quark.Components.TextTransform;
+using Soenneker.Quark.Components.FontWeight;
+using Soenneker.Quark.Components.FontStyleUtil;
+using Soenneker.Quark.Components.LineHeight;
+using Soenneker.Quark.Components.TextWrap;
+using Soenneker.Quark.Components.TextBreak;
+using Soenneker.Quark.Components.PositionOffset;
 using Soenneker.Quark.Dtos.Colors;
-using Soenneker.Quark.Enums.DisplayTypes;
-using Soenneker.Quark.Enums.Floats;
-using Soenneker.Quark.Enums.Shadows;
 using Soenneker.Quark.Enums.TextAlignments;
-using Soenneker.Quark.Enums.TextDecorations.Line;
-using Soenneker.Quark.Enums.VerticalAligns;
-using Soenneker.Quark.Enums.Visibilities;
 using Soenneker.Utils.AtomicBool;
 using Soenneker.Utils.PooledStringBuilders;
+using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Float;
+using Soenneker.Quark.Components.Shadow;
+using Soenneker.Quark.Components.Visibility;
 
 namespace Soenneker.Quark.Components;
 
@@ -53,22 +69,22 @@ public abstract class Component : ComponentBase, Abstract.IComponent
     public bool Hidden { get; set; }
 
     [Parameter]
-    public DisplayType? Display { get; set; }
+    public CssValue<DisplayBuilder>? Display { get; set; }
 
     [Parameter]
-    public Visibility? Visibility { get; set; }
+    public CssValue<VisibilityBuilder>? Visibility { get; set; }
 
     [Parameter]
-    public Float? Float { get; set; }
+    public CssValue<FloatBuilder>? Float { get; set; }
 
     [Parameter]
-    public VerticalAlign? VerticalAlign { get; set; }
+    public CssValue<VerticalAlignBuilder>? VerticalAlign { get; set; }
 
     [Parameter]
-    public Enums.TextOverflows.TextOverflow? TextOverflow { get; set; }
+    public CssValue<TextOverflowBuilder>? TextOverflow { get; set; }
 
     [Parameter]
-    public Shadow? BoxShadow { get; set; }
+    public CssValue<ShadowBuilder>? BoxShadow { get; set; }
 
     [Parameter]
     public CssValue<MarginBuilder>? Margin { get; set; }
@@ -80,16 +96,37 @@ public abstract class Component : ComponentBase, Abstract.IComponent
     public CssValue<PositionBuilder>? Position { get; set; }
 
     [Parameter]
+    public CssValue<PositionOffsetBuilder>? Offset { get; set; }
+
+    [Parameter]
     public CssValue<TextSizeBuilder>? TextSize { get; set; }
 
     [Parameter]
     public CssValue<WidthBuilder>? Width { get; set; }
 
     [Parameter]
+    public CssValue<WidthBuilder>? MinWidth { get; set; }
+
+    [Parameter]
+    public CssValue<WidthBuilder>? MaxWidth { get; set; }
+
+    [Parameter]
     public CssValue<HeightBuilder>? Height { get; set; }
 
     [Parameter]
+    public CssValue<HeightBuilder>? MinHeight { get; set; }
+
+    [Parameter]
+    public CssValue<HeightBuilder>? MaxHeight { get; set; }
+
+    [Parameter]
     public CssValue<OverflowBuilder>? Overflow { get; set; }
+
+    [Parameter]
+    public CssValue<OverflowBuilder>? OverflowX { get; set; }
+
+    [Parameter]
+    public CssValue<OverflowBuilder>? OverflowY { get; set; }
 
     [Parameter]
     public CssValue<ObjectFitBuilder>? ObjectFit { get; set; }
@@ -98,7 +135,52 @@ public abstract class Component : ComponentBase, Abstract.IComponent
     public TextAlignment? TextAlignment { get; set; }
 
     [Parameter]
-    public TextDecorationLine? TextDecorationLine { get; set; }
+    public CssValue<TextAlignBuilder>? TextAlignCss { get; set; }
+
+    [Parameter]
+    public CssValue<TextDecorationBuilder>? TextDecorationLine { get; set; }
+
+    [Parameter]
+    public CssValue<TextDecorationBuilder>? TextDecorationCss { get; set; }
+
+    [Parameter]
+    public CssValue<FlexBuilder>? Flex { get; set; }
+
+    [Parameter]
+    public CssValue<GapBuilder>? Gap { get; set; }
+
+    [Parameter]
+    public CssValue<BorderBuilder>? Border { get; set; }
+
+    [Parameter]
+    public CssValue<OpacityBuilder>? Opacity { get; set; }
+
+    [Parameter]
+    public CssValue<ZIndexBuilder>? ZIndex { get; set; }
+
+    [Parameter]
+    public CssValue<PointerEventsBuilder>? PointerEvents { get; set; }
+
+    [Parameter]
+    public CssValue<UserSelectBuilder>? UserSelect { get; set; }
+
+    [Parameter]
+    public CssValue<TextTransformBuilder>? TextTransform { get; set; }
+
+    [Parameter]
+    public CssValue<FontWeightBuilder>? FontWeight { get; set; }
+
+    [Parameter]
+    public CssValue<FontStyleBuilder>? FontStyle { get; set; }
+
+    [Parameter]
+    public CssValue<LineHeightBuilder>? LineHeight { get; set; }
+
+    [Parameter]
+    public CssValue<TextWrapBuilder>? TextWrap { get; set; }
+
+    [Parameter]
+    public CssValue<TextBreakBuilder>? TextBreak { get; set; }
 
     [Parameter]
     public EventCallback<MouseEventArgs> OnClick { get; set; }
@@ -181,15 +263,6 @@ public abstract class Component : ComponentBase, Abstract.IComponent
             if (!AriaLabel.IsNullOrEmpty()) attrs["aria-label"] = AriaLabel!;
             if (!AriaDescribedBy.IsNullOrEmpty()) attrs["aria-describedby"] = AriaDescribedBy!;
 
-            if (Display != null) AppendStyleDecl(ref sty, "display: ", Display.Value);
-            if (Visibility != null) AppendStyleDecl(ref sty, "visibility: ", Visibility.Value);
-            if (Float != null) AppendStyleDecl(ref sty, "float: ", Float.Value);
-            if (VerticalAlign != null) AppendStyleDecl(ref sty, "vertical-align: ", VerticalAlign.Value);
-            if (TextOverflow != null) AppendStyleDecl(ref sty, "text-overflow: ", TextOverflow.Value);
-            if (BoxShadow != null) AppendStyleDecl(ref sty, "box-shadow: ", BoxShadow.Value);
-            if (TextAlignment != null) AppendStyleDecl(ref sty, "text-align: ", TextAlignment.Value);
-            if (TextDecorationLine != null) AppendStyleDecl(ref sty, "text-decoration-line: ", TextDecorationLine.Value);
-
             {
                 string? textColorClass = TextColor.BuildClass("text");
                 if (textColorClass is not null)
@@ -214,13 +287,42 @@ public abstract class Component : ComponentBase, Abstract.IComponent
                 }
             }
 
+            AddCss(ref sty, ref cls, Display);
+            AddCss(ref sty, ref cls, Flex);
+            AddCss(ref sty, ref cls, Gap);
+            AddCss(ref sty, ref cls, Border);
+            AddCss(ref sty, ref cls, TextOverflow);
+            AddCss(ref sty, ref cls, TextAlignCss);
+            AddCss(ref sty, ref cls, TextDecorationCss);
+            AddCss(ref sty, ref cls, VerticalAlign);
+            AddCss(ref sty, ref cls, Float);
+            AddCss(ref sty, ref cls, Visibility);
+            AddCss(ref sty, ref cls, BoxShadow);
+            AddCss(ref sty, ref cls, Opacity);
+            AddCss(ref sty, ref cls, ZIndex);
+            AddCss(ref sty, ref cls, PointerEvents);
+            AddCss(ref sty, ref cls, UserSelect);
+            AddCss(ref sty, ref cls, TextTransform);
+            AddCss(ref sty, ref cls, FontWeight);
+            AddCss(ref sty, ref cls, FontStyle);
+            AddCss(ref sty, ref cls, LineHeight);
+            AddCss(ref sty, ref cls, TextWrap);
+            AddCss(ref sty, ref cls, TextBreak);
+
             AddCss(ref sty, ref cls, Margin);
             AddCss(ref sty, ref cls, Padding);
             AddCss(ref sty, ref cls, Position);
+            AddCss(ref sty, ref cls, Offset);
             AddCss(ref sty, ref cls, TextSize);
             AddCss(ref sty, ref cls, Width);
+            AddCss(ref sty, ref cls, MinWidth);
+            AddCss(ref sty, ref cls, MaxWidth);
             AddCss(ref sty, ref cls, Height);
+            AddCss(ref sty, ref cls, MinHeight);
+            AddCss(ref sty, ref cls, MaxHeight);
             AddCss(ref sty, ref cls, Overflow);
+            AddCss(ref sty, ref cls, OverflowX);
+            AddCss(ref sty, ref cls, OverflowY);
             AddCss(ref sty, ref cls, ObjectFit);
 
             if (Attributes is not null)

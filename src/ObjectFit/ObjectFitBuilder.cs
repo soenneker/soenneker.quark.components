@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Soenneker.Extensions.String;
-using Soenneker.Quark.Components.Common;
+using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 
 namespace Soenneker.Quark.Components.ObjectFit;
@@ -115,7 +115,13 @@ public sealed class ObjectFitBuilder : ICssBuilder
             {
                 string className = fitClass;
                 if (breakpointClass.HasContent())
-                    className = $"{breakpointClass}-{className}";
+                {
+                    int dashIndex = className.IndexOf('-');
+                    if (dashIndex > 0)
+                        className = $"{className.Substring(0, dashIndex)}-{breakpointClass}{className.Substring(dashIndex)}";
+                    else
+                        className = $"{breakpointClass}-{className}";
+                }
 
                 classes.Add(className);
             }

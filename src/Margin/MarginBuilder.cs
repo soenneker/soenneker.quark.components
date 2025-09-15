@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Soenneker.Extensions.String;
-using Soenneker.Quark.Components.Common;
+using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 using Soenneker.Quark.Enums.ElementSides;
 
@@ -194,26 +194,20 @@ public sealed class MarginBuilder : ICssBuilder
 
             if (sizeClass.HasContent())
             {
-                if (sideClass.HasContent())
-                {
-                    // Build the class name correctly: prefix + side + "-" + size
-                    string baseClass = sizeClass.Substring(0, 1); // "m"
-                    string size = sizeClass.Substring(2); // "3"
-                    var className = $"{baseClass}{sideClass}-{size}";
+                // Build the class name in Bootstrap order: m{side?}-{breakpoint?}-{size}
+                string baseClass = sizeClass.Substring(0, 1); // "m"
+                string size = sizeClass.Substring(2); // size number or "auto"
 
-                    if (breakpointClass.HasContent())
-                        className = $"{breakpointClass}-{className}";
+                string className = sideClass.HasContent()
+                    ? $"{baseClass}{sideClass}"
+                    : baseClass;
 
-                    classes.Add(className);
-                }
-                else
-                {
-                    string className = sizeClass;
-                    if (breakpointClass.HasContent())
-                        className = $"{breakpointClass}-{className}";
+                if (breakpointClass.HasContent())
+                    className = $"{className}-{breakpointClass}";
 
-                    classes.Add(className);
-                }
+                className = $"{className}-{size}";
+
+                classes.Add(className);
             }
         }
 

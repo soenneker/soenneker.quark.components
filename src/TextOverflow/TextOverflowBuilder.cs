@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Soenneker.Extensions.String;
-using Soenneker.Quark.Components.Common;
+using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 using Soenneker.Quark.Enums.GlobalKeywords;
 using TextOverflowEnum = Soenneker.Quark.Enums.TextOverflows.TextOverflow;
@@ -127,7 +127,13 @@ public sealed class TextOverflowBuilder : ICssBuilder
             {
                 string className = textOverflowClass;
                 if (breakpointClass.HasContent())
-                    className = $"{breakpointClass}-{className}";
+                {
+                    int dashIndex = className.IndexOf('-');
+                    if (dashIndex > 0)
+                        className = $"{className.Substring(0, dashIndex)}-{breakpointClass}{className.Substring(dashIndex)}";
+                    else
+                        className = $"{breakpointClass}-{className}";
+                }
 
                 classes.Add(className);
             }
