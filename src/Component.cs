@@ -397,7 +397,7 @@ public abstract class Component : ComponentBase, Abstract.IComponent
     protected virtual Task HandleFocus(FocusEventArgs e) => OnFocus.InvokeIfHasDelegate(e);
     protected virtual Task HandleBlur(FocusEventArgs e) => OnBlur.InvokeIfHasDelegate(e);
 
-    public void Dispose()
+    public virtual void Dispose()
     {
         // Run sync cleanup once
         if (Disposed.TrySetTrue())
