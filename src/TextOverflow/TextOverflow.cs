@@ -5,7 +5,7 @@ namespace Soenneker.Quark.Components.TextOverflow;
 /// <summary>
 /// Simplified text overflow utility with fluent API and Bootstrap-first approach.
 /// </summary>
-public static class TextOverflowUtility
+public static class TextOverflow
 {
     /// <summary>
     /// Clips the overflowing text at the content area boundary.
