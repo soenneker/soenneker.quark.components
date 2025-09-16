@@ -1,3 +1,5 @@
+using Soenneker.Quark.Enums.Size;
+
 namespace Soenneker.Quark.Components.TextSize;
 
 /// <summary>
@@ -8,12 +10,12 @@ public static class TextSize
     /// <summary>
     /// Extra small text size.
     /// </summary>
-    public static TextSizeBuilder Xs => new("xs");
+    public static TextSizeBuilder Xs => new(Size.ExtraSmall.Value);
 
     /// <summary>
     /// Small text size.
     /// </summary>
-    public static TextSizeBuilder Sm => new("sm");
+    public static TextSizeBuilder Sm => new(Size.Small.Value);
 
     /// <summary>
     /// Base text size (default).
@@ -23,12 +25,12 @@ public static class TextSize
     /// <summary>
     /// Large text size.
     /// </summary>
-    public static TextSizeBuilder Lg => new("lg");
+    public static TextSizeBuilder Lg => new(Size.Large.Value);
 
     /// <summary>
     /// Extra large text size.
     /// </summary>
-    public static TextSizeBuilder Xl => new("xl");
+    public static TextSizeBuilder Xl => new(Size.ExtraLarge.Value);
 
     /// <summary>
     /// 2X large text size.

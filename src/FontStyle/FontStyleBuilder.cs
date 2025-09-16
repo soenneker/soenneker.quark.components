@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
+using Soenneker.Quark.Enums.Size;
+using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.FontStyle;
 
@@ -81,7 +83,7 @@ public sealed class FontStyleBuilder : ICssBuilder
             if (cls.Length == 0)
                 continue;
 
-            string bp = GetBp(rule.Breakpoint);
+            string bp = BreakpointUtilities.GetBreakpointToken(rule.Breakpoint);
             if (bp.Length != 0)
                 cls = InsertBreakpoint(cls, bp);
 
@@ -115,33 +117,6 @@ public sealed class FontStyleBuilder : ICssBuilder
         return sb.ToString();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static string GetBp(Breakpoint? breakpoint)
-    {
-        if (breakpoint is null) return string.Empty;
-        switch (breakpoint)
-        {
-            case Breakpoint.PhoneValue:
-            case Breakpoint.ExtraSmallValue:
-                return string.Empty;
-            case Breakpoint.MobileValue:
-            case Breakpoint.SmallValue:
-                return "sm";
-            case Breakpoint.TabletValue:
-            case Breakpoint.MediumValue:
-                return "md";
-            case Breakpoint.LaptopValue:
-            case Breakpoint.LargeValue:
-                return "lg";
-            case Breakpoint.DesktopValue:
-            case Breakpoint.ExtraLargeValue:
-                return "xl";
-            case Breakpoint.ExtraExtraLargeValue:
-                return "xxl";
-            default:
-                return string.Empty;
-        }
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string InsertBreakpoint(string className, string bp)

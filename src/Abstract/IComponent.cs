@@ -13,8 +13,8 @@ using Soenneker.Quark.Dtos.Colors;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Soenneker.Quark.Components.BoxShadow;
 using Soenneker.Quark.Components.Float;
-using Soenneker.Quark.Components.Shadow;
 using Soenneker.Quark.Components.TextAlignment;
 using Soenneker.Quark.Components.TextDecoration;
 using Soenneker.Quark.Components.TextOverflow;
@@ -71,7 +71,7 @@ public interface IComponent : IDisposable, IAsyncDisposable
     /// <summary>
     /// Gets or sets the CSS <c>box-shadow</c> value to apply inline.
     /// </summary>
-    CssValue<ShadowBuilder>? BoxShadow { get; set; }
+    CssValue<BoxShadowBuilder>? BoxShadow { get; set; }
 
     CssValue<FloatBuilder>? Float { get; set; }
 

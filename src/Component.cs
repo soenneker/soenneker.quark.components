@@ -35,9 +35,9 @@ using Soenneker.Quark.Dtos.Colors;
 using Soenneker.Utils.AtomicBool;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.BoxShadow;
 using Soenneker.Quark.Components.Float;
 using Soenneker.Quark.Components.FontStyle;
-using Soenneker.Quark.Components.Shadow;
 using Soenneker.Quark.Components.TextAlignment;
 using Soenneker.Quark.Components.Visibility;
 
@@ -83,7 +83,7 @@ public abstract class Component : ComponentBase, Abstract.IComponent
     public CssValue<TextOverflowBuilder>? TextOverflow { get; set; }
 
     [Parameter]
-    public CssValue<ShadowBuilder>? BoxShadow { get; set; }
+    public CssValue<BoxShadowBuilder>? BoxShadow { get; set; }
 
     [Parameter]
     public CssValue<MarginBuilder>? Margin { get; set; }

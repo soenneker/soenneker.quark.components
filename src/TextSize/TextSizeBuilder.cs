@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
+using Soenneker.Quark.Enums.Size;
+using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.TextSize;
 
@@ -43,11 +45,11 @@ public sealed class TextSizeBuilder : ICssBuilder
     }
 
     // ----- Fluent size chaining -----
-    public TextSizeBuilder Xs => ChainSize("xs");
-    public TextSizeBuilder Sm => ChainSize("sm");
+    public TextSizeBuilder Xs => ChainSize(Size.ExtraSmall.Value);
+    public TextSizeBuilder Sm => ChainSize(Size.Small.Value);
     public TextSizeBuilder Base => ChainSize("base");
-    public TextSizeBuilder Lg => ChainSize("lg");
-    public TextSizeBuilder Xl => ChainSize("xl");
+    public TextSizeBuilder Lg => ChainSize(Size.Large.Value);
+    public TextSizeBuilder Xl => ChainSize(Size.ExtraLarge.Value);
     public TextSizeBuilder Xl2 => ChainSize("2xl");
     public TextSizeBuilder Xl3 => ChainSize("3xl");
     public TextSizeBuilder Xl4 => ChainSize("4xl");
@@ -105,7 +107,7 @@ public sealed class TextSizeBuilder : ICssBuilder
             if (sizeClass.Length == 0)
                 continue;
 
-            string bp = GetBreakpointClass(rule.Breakpoint);
+            string bp = BreakpointUtilities.GetBreakpointClass(rule.Breakpoint);
             if (bp.Length != 0)
                 sizeClass = InsertBreakpoint(sizeClass, bp);
 
@@ -196,42 +198,6 @@ public sealed class TextSizeBuilder : ICssBuilder
         };
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static string GetBreakpointClass(Breakpoint? breakpoint)
-    {
-        if (breakpoint is null)
-            return string.Empty;
-
-        // Classic switch for Intellenum *Value cases
-        switch (breakpoint)
-        {
-            case Breakpoint.PhoneValue:
-            case Breakpoint.ExtraSmallValue:
-                return string.Empty;
-
-            case Breakpoint.MobileValue:
-            case Breakpoint.SmallValue:
-                return "sm";
-
-            case Breakpoint.TabletValue:
-            case Breakpoint.MediumValue:
-                return "md";
-
-            case Breakpoint.LaptopValue:
-            case Breakpoint.LargeValue:
-                return "lg";
-
-            case Breakpoint.DesktopValue:
-            case Breakpoint.ExtraLargeValue:
-                return "xl";
-
-            case Breakpoint.ExtraExtraLargeValue:
-                return "xxl";
-
-            default:
-                return string.Empty;
-        }
-    }
 
     /// <summary>
     /// Insert breakpoint token as: "fs-4" + "md" → "fs-md-4".

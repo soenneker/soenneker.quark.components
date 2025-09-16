@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utilities;
 using Soenneker.Quark.Enums.Breakpoints;
+using Soenneker.Quark.Enums.Size;
+using Soenneker.Utils.PooledStringBuilders;
 
-namespace Soenneker.Quark.Components.Shadow;
+namespace Soenneker.Quark.Components.BoxShadow;
 
-public sealed class ShadowBuilder : ICssBuilder
+public sealed class BoxShadowBuilder : ICssBuilder
 {
-    private readonly List<ShadowRule> _rules = new(4);
+    private readonly List<BoxShadowRule> _rules = new(4);
 
     // ----- Class name constants -----
     private const string _classNone = "shadow-none";
@@ -17,49 +19,49 @@ public sealed class ShadowBuilder : ICssBuilder
     private const string _classSm = "shadow-sm";
     private const string _classLg = "shadow-lg";
 
-    internal ShadowBuilder(string value, Breakpoint? breakpoint = null)
+    internal BoxShadowBuilder(string value, Breakpoint? breakpoint = null)
     {
-        _rules.Add(new ShadowRule(value, breakpoint));
+        _rules.Add(new BoxShadowRule(value, breakpoint));
     }
 
-    internal ShadowBuilder(List<ShadowRule> rules)
+    internal BoxShadowBuilder(List<BoxShadowRule> rules)
     {
         if (rules is { Count: > 0 })
             _rules.AddRange(rules);
     }
 
-    public ShadowBuilder None => Chain("none");
-    public ShadowBuilder Base => Chain("base");
-    public ShadowBuilder Sm => Chain("sm");
-    public ShadowBuilder Lg => Chain("lg");
+    public BoxShadowBuilder None => Chain("none");
+    public BoxShadowBuilder Base => Chain("base");
+    public BoxShadowBuilder Sm => Chain(Size.Small.Value);
+    public BoxShadowBuilder Lg => Chain(Size.Large.Value);
 
-    public ShadowBuilder OnPhone => ChainBp(Breakpoint.Phone);
-    public ShadowBuilder OnMobile => ChainBp(Breakpoint.Mobile);
-    public ShadowBuilder OnTablet => ChainBp(Breakpoint.Tablet);
-    public ShadowBuilder OnLaptop => ChainBp(Breakpoint.Laptop);
-    public ShadowBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
-    public ShadowBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
+    public BoxShadowBuilder OnPhone => ChainBp(Breakpoint.Phone);
+    public BoxShadowBuilder OnMobile => ChainBp(Breakpoint.Mobile);
+    public BoxShadowBuilder OnTablet => ChainBp(Breakpoint.Tablet);
+    public BoxShadowBuilder OnLaptop => ChainBp(Breakpoint.Laptop);
+    public BoxShadowBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
+    public BoxShadowBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ShadowBuilder Chain(string value)
+    private BoxShadowBuilder Chain(string value)
     {
-        _rules.Add(new ShadowRule(value, null));
+        _rules.Add(new BoxShadowRule(value, null));
         return this;
     }
 
     /// <summary>Apply a breakpoint to the most recent rule (or bootstrap with "base" if empty).</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ShadowBuilder ChainBp(Breakpoint bp)
+    private BoxShadowBuilder ChainBp(Breakpoint bp)
     {
         if (_rules.Count == 0)
         {
-            _rules.Add(new ShadowRule("base", bp));
+            _rules.Add(new BoxShadowRule("base", bp));
             return this;
         }
 
         int lastIdx = _rules.Count - 1;
-        ShadowRule last = _rules[lastIdx];
-        _rules[lastIdx] = new ShadowRule(last.Value, bp);
+        BoxShadowRule last = _rules[lastIdx];
+        _rules[lastIdx] = new BoxShadowRule(last.Value, bp);
         return this;
     }
 
@@ -73,7 +75,7 @@ public sealed class ShadowBuilder : ICssBuilder
 
         for (var i = 0; i < _rules.Count; i++)
         {
-            ShadowRule rule = _rules[i];
+            BoxShadowRule rule = _rules[i];
 
             string baseClass = rule.Value switch
             {
@@ -87,7 +89,7 @@ public sealed class ShadowBuilder : ICssBuilder
             if (baseClass.Length == 0)
                 continue;
 
-            string bp = GetBp(rule.Breakpoint);
+            string bp = BreakpointUtilities.GetBreakpointToken(rule.Breakpoint);
             if (bp.Length != 0)
                 baseClass = InsertBreakpoint(baseClass, bp);
 
@@ -108,42 +110,6 @@ public sealed class ShadowBuilder : ICssBuilder
         return string.Empty;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static string GetBp(Breakpoint? breakpoint)
-    {
-        if (breakpoint is null)
-            return string.Empty;
-
-        // Classic switch statement for Intellenum *Value cases
-        switch (breakpoint)
-        {
-            case Breakpoint.PhoneValue:
-            case Breakpoint.ExtraSmallValue:
-                return string.Empty;
-
-            case Breakpoint.MobileValue:
-            case Breakpoint.SmallValue:
-                return "sm";
-
-            case Breakpoint.TabletValue:
-            case Breakpoint.MediumValue:
-                return "md";
-
-            case Breakpoint.LaptopValue:
-            case Breakpoint.LargeValue:
-                return "lg";
-
-            case Breakpoint.DesktopValue:
-            case Breakpoint.ExtraLargeValue:
-                return "xl";
-
-            case Breakpoint.ExtraExtraLargeValue:
-                return "xxl";
-
-            default:
-                return string.Empty;
-        }
-    }
 
     /// <summary>
     /// Insert breakpoint token as: "shadow-lg" + "md" → "shadow-md-lg".

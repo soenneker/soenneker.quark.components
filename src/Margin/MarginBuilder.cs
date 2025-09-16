@@ -5,6 +5,8 @@ using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 using Soenneker.Quark.Enums.ElementSides;
+using Soenneker.Quark.Enums.Size;
+using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.Margin;
 
@@ -134,7 +136,7 @@ public sealed class MarginBuilder : ICssBuilder
                 continue;
 
             string sideTok = GetSideToken(rule.Side);
-            string bpTok = GetBreakpointToken(rule.Breakpoint);
+            string bpTok = BreakpointUtilities.GetBreakpointToken(rule.Breakpoint);
 
             if (!first)
                 sb.Append(' ');
@@ -306,39 +308,4 @@ public sealed class MarginBuilder : ICssBuilder
             };
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static string GetBreakpointToken(Breakpoint? breakpoint)
-        {
-            if (breakpoint is null)
-                return string.Empty;
-
-            switch (breakpoint)
-            {
-                case Breakpoint.PhoneValue:
-                case Breakpoint.ExtraSmallValue:
-                    return string.Empty;
-
-                case Breakpoint.MobileValue:
-                case Breakpoint.SmallValue:
-                    return "sm";
-
-                case Breakpoint.TabletValue:
-                case Breakpoint.MediumValue:
-                    return "md";
-
-                case Breakpoint.LaptopValue:
-                case Breakpoint.LargeValue:
-                    return "lg";
-
-                case Breakpoint.DesktopValue:
-                case Breakpoint.ExtraLargeValue:
-                    return "xl";
-
-                case Breakpoint.ExtraExtraLargeValue:
-                    return "xxl";
-
-                default:
-                    return string.Empty;
-            }
-        }
     }

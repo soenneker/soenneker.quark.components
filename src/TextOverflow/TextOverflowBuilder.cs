@@ -5,6 +5,8 @@ using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 using Soenneker.Quark.Enums.GlobalKeywords;
+using Soenneker.Quark.Enums.Size;
+using Soenneker.Quark.Components.Utilities;
 using TextOverflowEnum = Soenneker.Quark.Enums.TextOverflows.TextOverflow;
 
 namespace Soenneker.Quark.Components.TextOverflow;
@@ -104,7 +106,7 @@ public sealed class TextOverflowBuilder : ICssBuilder
             if (baseClass.Length == 0)
                 continue;
 
-            string bp = GetBreakpointClass(rule.Breakpoint);
+            string bp = BreakpointUtilities.GetBreakpointClass(rule.Breakpoint);
             if (bp.Length != 0)
                 baseClass = InsertBreakpoint(baseClass, bp);
 
@@ -153,36 +155,6 @@ public sealed class TextOverflowBuilder : ICssBuilder
             case TextOverflowEnum.ClipValue:
             case TextOverflowEnum.EllipsisValue:
                 return _classTruncate;
-            default:
-                return string.Empty;
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static string GetBreakpointClass(Breakpoint? breakpoint)
-    {
-        if (breakpoint is null)
-            return string.Empty;
-
-        switch (breakpoint)
-        {
-            case Breakpoint.PhoneValue:
-            case Breakpoint.ExtraSmallValue:
-                return string.Empty;
-            case Breakpoint.MobileValue:
-            case Breakpoint.SmallValue:
-                return "sm";
-            case Breakpoint.TabletValue:
-            case Breakpoint.MediumValue:
-                return "md";
-            case Breakpoint.LaptopValue:
-            case Breakpoint.LargeValue:
-                return "lg";
-            case Breakpoint.DesktopValue:
-            case Breakpoint.ExtraLargeValue:
-                return "xl";
-            case Breakpoint.ExtraExtraLargeValue:
-                return "xxl";
             default:
                 return string.Empty;
         }

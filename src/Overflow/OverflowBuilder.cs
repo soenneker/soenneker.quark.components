@@ -1,9 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
+using Soenneker.Quark.Enums.Size;
+using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.Overflow;
 
@@ -94,7 +96,7 @@ public sealed class OverflowBuilder : ICssBuilder
             if (baseClass.Length == 0)
                 continue;
 
-            string bp = GetBp(rule.Breakpoint);
+            string bp = BreakpointUtilities.GetBreakpointToken(rule.Breakpoint);
             if (bp.Length != 0)
                 baseClass = InsertBreakpoint(baseClass, bp);
 
@@ -158,16 +160,16 @@ public sealed class OverflowBuilder : ICssBuilder
                 return string.Empty;
             case Breakpoint.MobileValue:
             case Breakpoint.SmallValue:
-                return "sm";
+                return Size.Small.Value;
             case Breakpoint.TabletValue:
             case Breakpoint.MediumValue:
-                return "md";
+                return Size.Medium.Value;
             case Breakpoint.LaptopValue:
             case Breakpoint.LargeValue:
-                return "lg";
+                return Size.Large.Value;
             case Breakpoint.DesktopValue:
             case Breakpoint.ExtraLargeValue:
-                return "xl";
+                return Size.ExtraLarge.Value;
             case Breakpoint.ExtraExtraLargeValue:
                 return "xxl";
             default:
@@ -176,7 +178,7 @@ public sealed class OverflowBuilder : ICssBuilder
     }
 
     /// <summary>
-    /// Insert breakpoint token as: "overflow-hidden" + "md" → "overflow-md-hidden".
+    /// Insert breakpoint token as: "overflow-hidden" + "md" ? "overflow-md-hidden".
     /// Falls back to "bp-{class}" if no dash exists.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
