@@ -1,6 +1,7 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using Soenneker.Extensions.String;
+using System.Runtime.CompilerServices;
+using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 
@@ -8,7 +9,11 @@ namespace Soenneker.Quark.Components.PositionOffset;
 
 public sealed class PositionOffsetBuilder : ICssBuilder
 {
-    private readonly List<PositionOffsetRule> _rules = [];
+    private readonly List<PositionOffsetRule> _rules = new(6);
+
+    private const string _classTranslateMiddle = "translate-middle";
+    private const string _classTranslateMiddleX = "translate-middle-x";
+    private const string _classTranslateMiddleY = "translate-middle-y";
 
     internal PositionOffsetBuilder(string property, string value, Breakpoint? breakpoint = null)
     {
@@ -17,7 +22,8 @@ public sealed class PositionOffsetBuilder : ICssBuilder
 
     internal PositionOffsetBuilder(List<PositionOffsetRule> rules)
     {
-        _rules.AddRange(rules);
+        if (rules is { Count: > 0 })
+            _rules.AddRange(rules);
     }
 
     public PositionOffsetBuilder Top0 => Chain("top", "0");
@@ -47,69 +53,88 @@ public sealed class PositionOffsetBuilder : ICssBuilder
     public PositionOffsetBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
     public PositionOffsetBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private PositionOffsetBuilder Chain(string property, string value)
     {
-        var list = new List<PositionOffsetRule>(_rules) { new PositionOffsetRule(property, value, null) };
-        return new PositionOffsetBuilder(list);
+        _rules.Add(new PositionOffsetRule(property, value, null));
+        return this;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private PositionOffsetBuilder ChainBp(Breakpoint bp)
     {
-        PositionOffsetRule last = _rules.LastOrDefault();
-        if (last.Property == null)
-            return new PositionOffsetBuilder("top", "0", bp);
+        if (_rules.Count == 0)
+        {
+            _rules.Add(new PositionOffsetRule("top", "0", bp));
+            return this;
+        }
 
-        var list = new List<PositionOffsetRule>(_rules);
-        list[list.Count - 1] = new PositionOffsetRule(last.Property, last.Value, bp);
-        return new PositionOffsetBuilder(list);
+        int lastIdx = _rules.Count - 1;
+        PositionOffsetRule last = _rules[lastIdx];
+        _rules[lastIdx] = new PositionOffsetRule(last.Property, last.Value, bp);
+        return this;
     }
 
     public string ToClass()
     {
         if (_rules.Count == 0) return string.Empty;
-        var classes = new List<string>(_rules.Count);
-        foreach (PositionOffsetRule rule in _rules)
+
+        using var sb = new PooledStringBuilder();
+        var first = true;
+
+        for (var i = 0; i < _rules.Count; i++)
         {
+            PositionOffsetRule rule = _rules[i];
             string cls = GetClass(rule.Property, rule.Value);
-            if (cls.HasContent())
-            {
-                string bp = GetBp(rule.Breakpoint);
-                string className = cls;
-                if (bp.HasContent())
-                {
-                    int dashIndex = className.IndexOf('-');
-                    if (dashIndex > 0)
-                        className = $"{className.Substring(0, dashIndex)}-{bp}{className.Substring(dashIndex)}";
-                    else
-                        className = $"{bp}-{className}";
-                }
-                classes.Add(className);
-            }
+            if (cls.Length == 0)
+                continue;
+
+            string bp = GetBp(rule.Breakpoint);
+            if (bp.Length != 0)
+                cls = InsertBreakpoint(cls, bp);
+
+            if (!first) sb.Append(' ');
+            else first = false;
+
+            sb.Append(cls);
         }
-        return string.Join(" ", classes);
+
+        return sb.ToString();
     }
 
     public string ToStyle()
     {
         if (_rules.Count == 0) return string.Empty;
-        var styles = new List<string>(_rules.Count);
-        foreach (PositionOffsetRule rule in _rules)
+
+        using var sb = new PooledStringBuilder();
+        var first = true;
+
+        for (var i = 0; i < _rules.Count; i++)
         {
+            PositionOffsetRule rule = _rules[i];
             string? css = GetStyle(rule.Property, rule.Value);
-            if (css.HasContent()) styles.Add(css);
+            if (css is null)
+                continue;
+
+            if (!first) sb.Append("; ");
+            else first = false;
+
+            sb.Append(css);
         }
-        return string.Join("; ", styles);
+
+        return sb.ToString();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetClass(string property, string value)
     {
         if (property == "translate")
         {
             return value switch
             {
-                "middle" => "translate-middle",
-                "middle-x" => "translate-middle-x",
-                "middle-y" => "translate-middle-y",
+                "middle" => _classTranslateMiddle,
+                "middle-x" => _classTranslateMiddleX,
+                "middle-y" => _classTranslateMiddleY,
                 _ => string.Empty
             };
         }
@@ -126,9 +151,10 @@ public sealed class PositionOffsetBuilder : ICssBuilder
         return $"{prefix}-{value}";
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string? GetStyle(string property, string value)
     {
-        if (property == "translate") return null; // class-only utility
+        if (property == "translate") return null;
         string cssProp = property switch
         {
             "top" => "top",
@@ -149,9 +175,10 @@ public sealed class PositionOffsetBuilder : ICssBuilder
         return $"{cssProp}: {cssVal}";
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetBp(Breakpoint? breakpoint)
     {
-        if (breakpoint == null) return string.Empty;
+        if (breakpoint is null) return string.Empty;
         switch (breakpoint)
         {
             case Breakpoint.PhoneValue:
@@ -175,6 +202,31 @@ public sealed class PositionOffsetBuilder : ICssBuilder
                 return string.Empty;
         }
     }
-}
 
-internal readonly record struct PositionOffsetRule(string Property, string Value, Breakpoint? Breakpoint);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string InsertBreakpoint(string className, string bp)
+    {
+        int dashIndex = className.IndexOf('-');
+        if (dashIndex > 0)
+        {
+            int len = dashIndex + 1 + bp.Length + (className.Length - dashIndex);
+            return string.Create(len, (className, dashIndex, bp), static (dst, s) =>
+            {
+                s.className.AsSpan(0, s.dashIndex).CopyTo(dst);
+                int idx = s.dashIndex;
+                dst[idx++] = '-';
+                s.bp.AsSpan().CopyTo(dst[idx..]);
+                idx += s.bp.Length;
+                s.className.AsSpan(s.dashIndex).CopyTo(dst[idx..]);
+            });
+        }
+
+        return string.Create(bp.Length + 1 + className.Length, (className, bp), static (dst, s) =>
+        {
+            s.bp.AsSpan().CopyTo(dst);
+            int idx = s.bp.Length;
+            dst[idx++] = '-';
+            s.className.AsSpan().CopyTo(dst[idx..]);
+        });
+    }
+}

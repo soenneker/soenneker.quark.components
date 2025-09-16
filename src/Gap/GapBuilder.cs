@@ -1,6 +1,7 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using Soenneker.Extensions.String;
+using System.Runtime.CompilerServices;
+using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 
@@ -11,7 +12,15 @@ namespace Soenneker.Quark.Components.Gap;
 /// </summary>
 public sealed class GapBuilder : ICssBuilder
 {
-    private readonly List<GapRule> _rules = [];
+    private readonly List<GapRule> _rules = new(4);
+
+    private const string _classGap0 = "gap-0";
+    private const string _classGap1 = "gap-1";
+    private const string _classGap2 = "gap-2";
+    private const string _classGap3 = "gap-3";
+    private const string _classGap4 = "gap-4";
+    private const string _classGap5 = "gap-5";
+    private const string _stylePrefix = "gap: ";
 
     internal GapBuilder(int size, Breakpoint? breakpoint = null)
     {
@@ -21,7 +30,8 @@ public sealed class GapBuilder : ICssBuilder
 
     internal GapBuilder(List<GapRule> rules)
     {
-        _rules.AddRange(rules);
+        if (rules is { Count: > 0 })
+            _rules.AddRange(rules);
     }
 
     /// <summary>
@@ -84,22 +94,26 @@ public sealed class GapBuilder : ICssBuilder
     /// </summary>
     public GapBuilder OnWideScreen => ChainWithBreakpoint(Breakpoint.ExtraExtraLarge);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private GapBuilder ChainWithSize(int size)
     {
-        var newRules = new List<GapRule>(_rules) { new GapRule(size, null) };
-        return new GapBuilder(newRules);
+        _rules.Add(new GapRule(size, null));
+        return this;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private GapBuilder ChainWithBreakpoint(Breakpoint breakpoint)
     {
-        GapRule? lastRule = _rules.LastOrDefault();
-        if (lastRule == null)
-            return new GapBuilder(0, breakpoint);
+        if (_rules.Count == 0)
+        {
+            _rules.Add(new GapRule(0, breakpoint));
+            return this;
+        }
 
-        var newRules = new List<GapRule>(_rules);
-        // Update the last rule with the new breakpoint
-        newRules[newRules.Count - 1] = new GapRule(lastRule.Size, breakpoint);
-        return new GapBuilder(newRules);
+        int lastIdx = _rules.Count - 1;
+        GapRule last = _rules[lastIdx];
+        _rules[lastIdx] = new GapRule(last.Size, breakpoint);
+        return this;
     }
 
     /// <summary>
@@ -110,30 +124,27 @@ public sealed class GapBuilder : ICssBuilder
         if (_rules.Count == 0)
             return string.Empty;
 
-        var classes = new List<string>(_rules.Count);
+        using var sb = new PooledStringBuilder();
+        var first = true;
 
-        foreach (GapRule rule in _rules)
+        for (var i = 0; i < _rules.Count; i++)
         {
-            string sizeClass = GetSizeClass(rule.Size);
-            string breakpointClass = GetBreakpointClass(rule.Breakpoint);
+            GapRule rule = _rules[i];
+            string cls = GetSizeClass(rule.Size);
+            if (cls.Length == 0)
+                continue;
 
-            if (sizeClass.HasContent())
-            {
-                string className = sizeClass;
-                if (breakpointClass.HasContent())
-                {
-                    int dashIndex = className.IndexOf('-');
-                    if (dashIndex > 0)
-                        className = $"{className.Substring(0, dashIndex)}-{breakpointClass}{className.Substring(dashIndex)}";
-                    else
-                        className = $"{breakpointClass}-{className}";
-                }
+            string bp = GetBreakpointClass(rule.Breakpoint);
+            if (bp.Length != 0)
+                cls = InsertBreakpoint(cls, bp);
 
-                classes.Add(className);
-            }
+            if (!first) sb.Append(' ');
+            else first = false;
+
+            sb.Append(cls);
         }
 
-        return string.Join(" ", classes);
+        return sb.ToString();
     }
 
     /// <summary>
@@ -144,33 +155,42 @@ public sealed class GapBuilder : ICssBuilder
         if (_rules.Count == 0)
             return string.Empty;
 
-        var styles = new List<string>(_rules.Count);
+        using var sb = new PooledStringBuilder();
+        var first = true;
 
-        foreach (GapRule rule in _rules)
+        for (var i = 0; i < _rules.Count; i++)
         {
+            GapRule rule = _rules[i];
             string? sizeValue = GetSizeValue(rule.Size);
-            if (sizeValue == null) continue;
+            if (sizeValue is null)
+                continue;
 
-            styles.Add($"gap: {sizeValue}");
+            if (!first) sb.Append("; ");
+            else first = false;
+
+            sb.Append(_stylePrefix);
+            sb.Append(sizeValue);
         }
 
-        return string.Join("; ", styles);
+        return sb.ToString();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetSizeClass(int size)
     {
         return size switch
         {
-            0 => "gap-0",
-            1 => "gap-1",
-            2 => "gap-2",
-            3 => "gap-3",
-            4 => "gap-4",
-            5 => "gap-5",
+            0 => _classGap0,
+            1 => _classGap1,
+            2 => _classGap2,
+            3 => _classGap3,
+            4 => _classGap4,
+            5 => _classGap5,
             _ => string.Empty
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string? GetSizeValue(int size)
     {
         return size switch
@@ -185,10 +205,10 @@ public sealed class GapBuilder : ICssBuilder
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetBreakpointClass(Breakpoint? breakpoint)
     {
-        if (breakpoint == null) return string.Empty;
-
+        if (breakpoint is null) return string.Empty;
         switch (breakpoint)
         {
             case Breakpoint.PhoneValue:
@@ -211,5 +231,32 @@ public sealed class GapBuilder : ICssBuilder
             default:
                 return string.Empty;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string InsertBreakpoint(string className, string bp)
+    {
+        int dashIndex = className.IndexOf('-');
+        if (dashIndex > 0)
+        {
+            int len = dashIndex + 1 + bp.Length + (className.Length - dashIndex);
+            return string.Create(len, (className, dashIndex, bp), static (dst, s) =>
+            {
+                s.className.AsSpan(0, s.dashIndex).CopyTo(dst);
+                int idx = s.dashIndex;
+                dst[idx++] = '-';
+                s.bp.AsSpan().CopyTo(dst[idx..]);
+                idx += s.bp.Length;
+                s.className.AsSpan(s.dashIndex).CopyTo(dst[idx..]);
+            });
+        }
+
+        return string.Create(bp.Length + 1 + className.Length, (className, bp), static (dst, s) =>
+        {
+            s.bp.AsSpan().CopyTo(dst);
+            int idx = s.bp.Length;
+            dst[idx++] = '-';
+            s.className.AsSpan().CopyTo(dst[idx..]);
+        });
     }
 }

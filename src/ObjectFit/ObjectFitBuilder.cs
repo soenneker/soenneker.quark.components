@@ -1,6 +1,7 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using Soenneker.Extensions.String;
+using System.Runtime.CompilerServices;
+using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 
@@ -11,7 +12,14 @@ namespace Soenneker.Quark.Components.ObjectFit;
 /// </summary>
 public sealed class ObjectFitBuilder : ICssBuilder
 {
-    private readonly List<ObjectFitRule> _rules = [];
+    private readonly List<ObjectFitRule> _rules = new(4);
+
+    private const string _classContain = "object-fit-contain";
+    private const string _classCover = "object-fit-cover";
+    private const string _classFill = "object-fit-fill";
+    private const string _classScale = "object-fit-scale";
+    private const string _classNone = "object-fit-none";
+    private const string _stylePrefix = "object-fit: ";
 
     internal ObjectFitBuilder(string fit, Breakpoint? breakpoint = null)
     {
@@ -20,33 +28,40 @@ public sealed class ObjectFitBuilder : ICssBuilder
 
     internal ObjectFitBuilder(List<ObjectFitRule> rules)
     {
-        _rules.AddRange(rules);
+        if (rules is { Count: > 0 })
+            _rules.AddRange(rules);
     }
 
     /// <summary>
     /// Chain with contain for the next rule.
     /// </summary>
-    public ObjectFitBuilder Contain => ChainWithFit("contain");
+    public ObjectFitBuilder Contain => ChainWithFit(Enums.ObjectFits.ObjectFit.ContainValue);
 
     /// <summary>
     /// Chain with cover for the next rule.
     /// </summary>
-    public ObjectFitBuilder Cover => ChainWithFit("cover");
+    public ObjectFitBuilder Cover => ChainWithFit(Enums.ObjectFits.ObjectFit.CoverValue);
 
     /// <summary>
     /// Chain with fill for the next rule.
     /// </summary>
-    public ObjectFitBuilder Fill => ChainWithFit("fill");
+    public ObjectFitBuilder Fill => ChainWithFit(Enums.ObjectFits.ObjectFit.FillValue);
 
     /// <summary>
     /// Chain with scale-down for the next rule.
     /// </summary>
-    public ObjectFitBuilder ScaleDown => ChainWithFit("scale-down");
+    public ObjectFitBuilder ScaleDown => ChainWithFit(Enums.ObjectFits.ObjectFit.ScaleDownValue);
 
     /// <summary>
     /// Chain with none for the next rule.
     /// </summary>
-    public ObjectFitBuilder None => ChainWithFit("none");
+    public ObjectFitBuilder None => ChainWithFit(Enums.ObjectFits.ObjectFit.NoneValue);
+
+    public ObjectFitBuilder Inherit => ChainWithFit(Enums.GlobalKeywords.GlobalKeyword.InheritValue);
+    public ObjectFitBuilder Initial => ChainWithFit(Enums.GlobalKeywords.GlobalKeyword.InitialValue);
+    public ObjectFitBuilder Revert => ChainWithFit(Enums.GlobalKeywords.GlobalKeyword.RevertValue);
+    public ObjectFitBuilder RevertLayer => ChainWithFit(Enums.GlobalKeywords.GlobalKeyword.RevertLayerValue);
+    public ObjectFitBuilder Unset => ChainWithFit(Enums.GlobalKeywords.GlobalKeyword.UnsetValue);
 
     /// <summary>
     /// Apply on phone devices (portrait phones, less than 576px).
@@ -78,22 +93,26 @@ public sealed class ObjectFitBuilder : ICssBuilder
     /// </summary>
     public ObjectFitBuilder OnWideScreen => ChainWithBreakpoint(Breakpoint.ExtraExtraLarge);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ObjectFitBuilder ChainWithFit(string fit)
     {
-        var newRules = new List<ObjectFitRule>(_rules) { new ObjectFitRule(fit, null) };
-        return new ObjectFitBuilder(newRules);
+        _rules.Add(new ObjectFitRule(fit, null));
+        return this;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ObjectFitBuilder ChainWithBreakpoint(Breakpoint breakpoint)
     {
-        ObjectFitRule? lastRule = _rules.LastOrDefault();
-        if (lastRule == null)
-            return new ObjectFitBuilder("contain", breakpoint);
+        if (_rules.Count == 0)
+        {
+            _rules.Add(new ObjectFitRule(Enums.ObjectFits.ObjectFit.ContainValue, breakpoint));
+            return this;
+        }
 
-        var newRules = new List<ObjectFitRule>(_rules);
-        // Update the last rule with the new breakpoint
-        newRules[newRules.Count - 1] = new ObjectFitRule(lastRule.Fit, breakpoint);
-        return new ObjectFitBuilder(newRules);
+        int lastIdx = _rules.Count - 1;
+        ObjectFitRule last = _rules[lastIdx];
+        _rules[lastIdx] = new ObjectFitRule(last.Fit, breakpoint);
+        return this;
     }
 
     /// <summary>
@@ -104,30 +123,27 @@ public sealed class ObjectFitBuilder : ICssBuilder
         if (_rules.Count == 0)
             return string.Empty;
 
-        var classes = new List<string>(_rules.Count);
+        using var sb = new PooledStringBuilder();
+        var first = true;
 
-        foreach (ObjectFitRule rule in _rules)
+        for (var i = 0; i < _rules.Count; i++)
         {
-            string fitClass = GetFitClass(rule.Fit);
-            string breakpointClass = GetBreakpointClass(rule.Breakpoint);
+            ObjectFitRule rule = _rules[i];
+            string cls = GetFitClass(rule.Fit);
+            if (cls.Length == 0)
+                continue;
 
-            if (fitClass.HasContent())
-            {
-                string className = fitClass;
-                if (breakpointClass.HasContent())
-                {
-                    int dashIndex = className.IndexOf('-');
-                    if (dashIndex > 0)
-                        className = $"{className.Substring(0, dashIndex)}-{breakpointClass}{className.Substring(dashIndex)}";
-                    else
-                        className = $"{breakpointClass}-{className}";
-                }
+            string bp = GetBreakpointClass(rule.Breakpoint);
+            if (bp.Length != 0)
+                cls = InsertBreakpoint(cls, bp);
 
-                classes.Add(className);
-            }
+            if (!first) sb.Append(' ');
+            else first = false;
+
+            sb.Append(cls);
         }
 
-        return string.Join(" ", classes);
+        return sb.ToString();
     }
 
     /// <summary>
@@ -138,36 +154,44 @@ public sealed class ObjectFitBuilder : ICssBuilder
         if (_rules.Count == 0)
             return string.Empty;
 
-        var styles = new List<string>(_rules.Count);
+        using var sb = new PooledStringBuilder();
+        var first = true;
 
-        foreach (ObjectFitRule rule in _rules)
+        for (var i = 0; i < _rules.Count; i++)
         {
-            if (rule.Fit.HasContent())
-            {
-                styles.Add($"object-fit: {rule.Fit}");
-            }
+            ObjectFitRule rule = _rules[i];
+            string val = rule.Fit;
+            if (string.IsNullOrEmpty(val))
+                continue;
+
+            if (!first) sb.Append("; ");
+            else first = false;
+
+            sb.Append(_stylePrefix);
+            sb.Append(val);
         }
 
-        return string.Join("; ", styles);
+        return sb.ToString();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetFitClass(string fit)
     {
         return fit switch
         {
-            "contain" => "object-fit-contain",
-            "cover" => "object-fit-cover",
-            "fill" => "object-fit-fill",
-            "scale-down" => "object-fit-scale",
-            "none" => "object-fit-none",
+            Enums.ObjectFits.ObjectFit.ContainValue => _classContain,
+            Enums.ObjectFits.ObjectFit.CoverValue => _classCover,
+            Enums.ObjectFits.ObjectFit.FillValue => _classFill,
+            Enums.ObjectFits.ObjectFit.ScaleDownValue => _classScale,
+            Enums.ObjectFits.ObjectFit.NoneValue => _classNone,
             _ => string.Empty
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetBreakpointClass(Breakpoint? breakpoint)
     {
-        if (breakpoint == null) return string.Empty;
-
+        if (breakpoint is null) return string.Empty;
         switch (breakpoint)
         {
             case Breakpoint.PhoneValue:
@@ -190,6 +214,33 @@ public sealed class ObjectFitBuilder : ICssBuilder
             default:
                 return string.Empty;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string InsertBreakpoint(string className, string bp)
+    {
+        int dashIndex = className.IndexOf('-');
+        if (dashIndex > 0)
+        {
+            int len = dashIndex + 1 + bp.Length + (className.Length - dashIndex);
+            return string.Create(len, (className, dashIndex, bp), static (dst, s) =>
+            {
+                s.className.AsSpan(0, s.dashIndex).CopyTo(dst);
+                int idx = s.dashIndex;
+                dst[idx++] = '-';
+                s.bp.AsSpan().CopyTo(dst[idx..]);
+                idx += s.bp.Length;
+                s.className.AsSpan(s.dashIndex).CopyTo(dst[idx..]);
+            });
+        }
+
+        return string.Create(bp.Length + 1 + className.Length, (className, bp), static (dst, s) =>
+        {
+            s.bp.AsSpan().CopyTo(dst);
+            int idx = s.bp.Length;
+            dst[idx++] = '-';
+            s.className.AsSpan().CopyTo(dst[idx..]);
+        });
     }
 }
 

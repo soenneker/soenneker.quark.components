@@ -1,6 +1,7 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using Soenneker.Extensions.String;
+using System.Runtime.CompilerServices;
+using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 
@@ -11,7 +12,14 @@ namespace Soenneker.Quark.Components.Height;
 /// </summary>
 public sealed class HeightBuilder : ICssBuilder
 {
-    private readonly List<HeightRule> _rules = [];
+    private readonly List<HeightRule> _rules = new(4);
+
+    private const string _classH25 = "h-25";
+    private const string _classH50 = "h-50";
+    private const string _classH75 = "h-75";
+    private const string _classH100 = "h-100";
+    private const string _classHAuto = "h-auto";
+    private const string _heightPrefix = "height: ";
 
     internal HeightBuilder(string size, Breakpoint? breakpoint = null)
     {
@@ -20,150 +28,113 @@ public sealed class HeightBuilder : ICssBuilder
 
     internal HeightBuilder(List<HeightRule> rules)
     {
-        _rules.AddRange(rules);
+        if (rules is { Count: > 0 })
+            _rules.AddRange(rules);
     }
 
-    /// <summary>
-    /// Chain with 25% height for the next rule.
-    /// </summary>
     public HeightBuilder P25 => ChainWithSize("25");
-
-    /// <summary>
-    /// Chain with 50% height for the next rule.
-    /// </summary>
     public HeightBuilder P50 => ChainWithSize("50");
-
-    /// <summary>
-    /// Chain with 75% height for the next rule.
-    /// </summary>
     public HeightBuilder P75 => ChainWithSize("75");
-
-    /// <summary>
-    /// Chain with 100% height for the next rule.
-    /// </summary>
     public HeightBuilder P100 => ChainWithSize("100");
-
-    /// <summary>
-    /// Chain with auto height for the next rule.
-    /// </summary>
     public HeightBuilder Auto => ChainWithSize("auto");
 
-    /// <summary>
-    /// Apply on phone devices (portrait phones, less than 576px).
-    /// </summary>
     public HeightBuilder OnPhone => ChainWithBreakpoint(Breakpoint.Phone);
-
-    /// <summary>
-    /// Apply on mobile devices (landscape phones, 576px and up).
-    /// </summary>
     public HeightBuilder OnMobile => ChainWithBreakpoint(Breakpoint.Mobile);
-
-    /// <summary>
-    /// Apply on tablet devices (tablets, 768px and up).
-    /// </summary>
     public HeightBuilder OnTablet => ChainWithBreakpoint(Breakpoint.Tablet);
-
-    /// <summary>
-    /// Apply on laptop devices (laptops, 992px and up).
-    /// </summary>
     public HeightBuilder OnLaptop => ChainWithBreakpoint(Breakpoint.Laptop);
-
-    /// <summary>
-    /// Apply on desktop devices (desktops, 1200px and up).
-    /// </summary>
     public HeightBuilder OnDesktop => ChainWithBreakpoint(Breakpoint.Desktop);
-
-    /// <summary>
-    /// Apply on wide screen devices (larger desktops, 1400px and up).
-    /// </summary>
     public HeightBuilder OnWideScreen => ChainWithBreakpoint(Breakpoint.ExtraExtraLarge);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private HeightBuilder ChainWithSize(string size)
     {
-        var newRules = new List<HeightRule>(_rules) { new HeightRule(size, null) };
-        return new HeightBuilder(newRules);
+        _rules.Add(new HeightRule(size, null));
+        return this;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private HeightBuilder ChainWithBreakpoint(Breakpoint breakpoint)
     {
-        HeightRule? lastRule = _rules.LastOrDefault();
-        if (lastRule == null)
-            return new HeightBuilder("100", breakpoint);
+        if (_rules.Count == 0)
+        {
+            _rules.Add(new HeightRule("100", breakpoint));
+            return this;
+        }
 
-        var newRules = new List<HeightRule>(_rules);
-        // Update the last rule with the new breakpoint
-        newRules[newRules.Count - 1] = new HeightRule(lastRule.Size, breakpoint);
-        return new HeightBuilder(newRules);
+        int lastIdx = _rules.Count - 1;
+        HeightRule last = _rules[lastIdx];
+        _rules[lastIdx] = new HeightRule(last.Size, breakpoint);
+        return this;
     }
 
-    /// <summary>
-    /// Gets the CSS class string for the current configuration.
-    /// </summary>
     public string ToClass()
     {
         if (_rules.Count == 0)
             return string.Empty;
 
-        var classes = new List<string>(_rules.Count);
+        using var sb = new PooledStringBuilder();
+        var first = true;
 
-        foreach (HeightRule rule in _rules)
+        for (var i = 0; i < _rules.Count; i++)
         {
-            string heightClass = GetHeightClass(rule.Size);
-            string breakpointClass = GetBreakpointClass(rule.Breakpoint);
+            HeightRule rule = _rules[i];
+            string cls = GetHeightClass(rule.Size);
+            if (cls.Length == 0)
+                continue;
 
-            if (heightClass.HasContent())
-            {
-                string className = heightClass;
-                if (breakpointClass.HasContent())
-                {
-                    int dashIndex = className.IndexOf('-');
-                    if (dashIndex > 0)
-                        className = $"{className.Substring(0, dashIndex)}-{breakpointClass}{className.Substring(dashIndex)}";
-                    else
-                        className = $"{breakpointClass}-{className}";
-                }
+            string bp = GetBreakpointClass(rule.Breakpoint);
+            if (bp.Length != 0)
+                cls = InsertBreakpoint(cls, bp);
 
-                classes.Add(className);
-            }
+            if (!first) sb.Append(' ');
+            else first = false;
+
+            sb.Append(cls);
         }
 
-        return string.Join(" ", classes);
+        return sb.ToString();
     }
 
-    /// <summary>
-    /// Gets the CSS style string for the current configuration.
-    /// </summary>
     public string ToStyle()
     {
         if (_rules.Count == 0)
             return string.Empty;
 
-        var styles = new List<string>(_rules.Count);
+        using var sb = new PooledStringBuilder();
+        var first = true;
 
-        foreach (HeightRule rule in _rules)
+        for (var i = 0; i < _rules.Count; i++)
         {
-            string? heightValue = GetHeightValue(rule.Size);
-            if (heightValue == null) continue;
+            HeightRule rule = _rules[i];
+            string? val = GetHeightValue(rule.Size);
+            if (val is null)
+                continue;
 
-            styles.Add($"height: {heightValue}");
+            if (!first) sb.Append("; ");
+            else first = false;
+
+            sb.Append(_heightPrefix);
+            sb.Append(val);
         }
 
-        return string.Join("; ", styles);
+        return sb.ToString();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetHeightClass(string size)
     {
         return size switch
         {
-            "25" => "h-25",
-            "50" => "h-50",
-            "75" => "h-75",
-            "100" => "h-100",
-            "auto" => "h-auto",
+            "25" => _classH25,
+            "50" => _classH50,
+            "75" => _classH75,
+            "100" => _classH100,
+            "auto" => _classHAuto,
             _ => string.Empty
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string? GetHeightValue(string size)
     {
         return size switch
@@ -177,9 +148,11 @@ public sealed class HeightBuilder : ICssBuilder
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetBreakpointClass(Breakpoint? breakpoint)
     {
-        if (breakpoint == null) return string.Empty;
+        if (breakpoint is null)
+            return string.Empty;
 
         switch (breakpoint)
         {
@@ -204,6 +177,31 @@ public sealed class HeightBuilder : ICssBuilder
                 return string.Empty;
         }
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string InsertBreakpoint(string className, string bp)
+    {
+        int dashIndex = className.IndexOf('-');
+        if (dashIndex > 0)
+        {
+            int len = dashIndex + 1 + bp.Length + (className.Length - dashIndex);
+            return string.Create(len, (className, dashIndex, bp), static (dst, s) =>
+            {
+                s.className.AsSpan(0, s.dashIndex).CopyTo(dst);
+                int idx = s.dashIndex;
+                dst[idx++] = '-';
+                s.bp.AsSpan().CopyTo(dst[idx..]);
+                idx += s.bp.Length;
+                s.className.AsSpan(s.dashIndex).CopyTo(dst[idx..]);
+            });
+        }
+
+        return string.Create(bp.Length + 1 + className.Length, (className, bp), static (dst, s) =>
+        {
+            s.bp.AsSpan().CopyTo(dst);
+            int idx = s.bp.Length;
+            dst[idx++] = '-';
+            s.className.AsSpan().CopyTo(dst[idx..]);
+        });
+    }
 }
-
-

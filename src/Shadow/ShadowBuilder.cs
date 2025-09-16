@@ -1,6 +1,7 @@
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using Soenneker.Extensions.String;
+using System.Runtime.CompilerServices;
+using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 
@@ -8,7 +9,13 @@ namespace Soenneker.Quark.Components.Shadow;
 
 public sealed class ShadowBuilder : ICssBuilder
 {
-    private readonly List<ShadowRule> _rules = [];
+    private readonly List<ShadowRule> _rules = new(4);
+
+    // ----- Class name constants -----
+    private const string _classNone = "shadow-none";
+    private const string _classBase = "shadow";
+    private const string _classSm = "shadow-sm";
+    private const string _classLg = "shadow-lg";
 
     internal ShadowBuilder(string value, Breakpoint? breakpoint = null)
     {
@@ -17,7 +24,8 @@ public sealed class ShadowBuilder : ICssBuilder
 
     internal ShadowBuilder(List<ShadowRule> rules)
     {
-        _rules.AddRange(rules);
+        if (rules is { Count: > 0 })
+            _rules.AddRange(rules);
     }
 
     public ShadowBuilder None => Chain("none");
@@ -32,87 +40,146 @@ public sealed class ShadowBuilder : ICssBuilder
     public ShadowBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
     public ShadowBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ShadowBuilder Chain(string value)
     {
-        var list = new List<ShadowRule>(_rules) { new ShadowRule(value, null) };
-        return new ShadowBuilder(list);
+        _rules.Add(new ShadowRule(value, null));
+        return this;
     }
 
+    /// <summary>Apply a breakpoint to the most recent rule (or bootstrap with "base" if empty).</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ShadowBuilder ChainBp(Breakpoint bp)
     {
-        ShadowRule last = _rules.LastOrDefault();
-        if (last.Value == null)
-            return new ShadowBuilder("base", bp);
+        if (_rules.Count == 0)
+        {
+            _rules.Add(new ShadowRule("base", bp));
+            return this;
+        }
 
-        var list = new List<ShadowRule>(_rules);
-        list[list.Count - 1] = new ShadowRule(last.Value, bp);
-        return new ShadowBuilder(list);
+        int lastIdx = _rules.Count - 1;
+        ShadowRule last = _rules[lastIdx];
+        _rules[lastIdx] = new ShadowRule(last.Value, bp);
+        return this;
     }
 
     public string ToClass()
     {
-        if (_rules.Count == 0) return string.Empty;
-        var classes = new List<string>(_rules.Count);
-        foreach (ShadowRule rule in _rules)
+        if (_rules.Count == 0)
+            return string.Empty;
+
+        using var sb = new PooledStringBuilder();
+        var first = true;
+
+        for (var i = 0; i < _rules.Count; i++)
         {
-            string cls = rule.Value switch
+            ShadowRule rule = _rules[i];
+
+            string baseClass = rule.Value switch
             {
-                "none" => "shadow-none",
-                "base" => "shadow",
-                "sm" => "shadow-sm",
-                "lg" => "shadow-lg",
+                "none" => _classNone,
+                "base" => _classBase,
+                "sm" => _classSm,
+                "lg" => _classLg,
                 _ => string.Empty
             };
-            if (cls.HasContent())
-            {
-                string bp = GetBp(rule.Breakpoint);
-                string className = cls;
-                if (bp.HasContent())
-                {
-                    int dashIndex = className.IndexOf('-');
-                    if (dashIndex > 0)
-                        className = $"{className.Substring(0, dashIndex)}-{bp}{className.Substring(dashIndex)}";
-                    else
-                        className = $"{bp}-{className}";
-                }
-                classes.Add(className);
-            }
+
+            if (baseClass.Length == 0)
+                continue;
+
+            string bp = GetBp(rule.Breakpoint);
+            if (bp.Length != 0)
+                baseClass = InsertBreakpoint(baseClass, bp);
+
+            if (!first)
+                sb.Append(' ');
+            else
+                first = false;
+
+            sb.Append(baseClass);
         }
-        return string.Join(" ", classes);
+
+        return sb.ToString();
     }
 
     public string ToStyle()
     {
-        // Shadow utilities are class-first; omit style mapping
+        // Shadow utilities are class-first; no inline style mapping
         return string.Empty;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetBp(Breakpoint? breakpoint)
     {
-        if (breakpoint == null) return string.Empty;
+        if (breakpoint is null)
+            return string.Empty;
+
+        // Classic switch statement for Intellenum *Value cases
         switch (breakpoint)
         {
             case Breakpoint.PhoneValue:
             case Breakpoint.ExtraSmallValue:
                 return string.Empty;
+
             case Breakpoint.MobileValue:
             case Breakpoint.SmallValue:
                 return "sm";
+
             case Breakpoint.TabletValue:
             case Breakpoint.MediumValue:
                 return "md";
+
             case Breakpoint.LaptopValue:
             case Breakpoint.LargeValue:
                 return "lg";
+
             case Breakpoint.DesktopValue:
             case Breakpoint.ExtraLargeValue:
                 return "xl";
+
             case Breakpoint.ExtraExtraLargeValue:
                 return "xxl";
+
             default:
                 return string.Empty;
         }
     }
-}
 
-internal readonly record struct ShadowRule(string Value, Breakpoint? Breakpoint);
+    /// <summary>
+    /// Insert breakpoint token as: "shadow-lg" + "md" → "shadow-md-lg".
+    /// Falls back to "bp-{class}" if no dash exists.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string InsertBreakpoint(string className, string bp)
+    {
+        int dashIndex = className.IndexOf('-');
+        if (dashIndex > 0)
+        {
+            // length = prefix + "-" + bp + remainder
+            int len = dashIndex + 1 + bp.Length + (className.Length - dashIndex);
+            return string.Create(len, (className, dashIndex, bp), static (dst, s) =>
+            {
+                // prefix
+                s.className.AsSpan(0, s.dashIndex).CopyTo(dst);
+                int idx = s.dashIndex;
+
+                // "-" + bp
+                dst[idx++] = '-';
+                s.bp.AsSpan().CopyTo(dst[idx..]);
+                idx += s.bp.Length;
+
+                // remainder (starts with '-')
+                s.className.AsSpan(s.dashIndex).CopyTo(dst[idx..]);
+            });
+        }
+
+        // Fallback: "bp-{className}"
+        return string.Create(bp.Length + 1 + className.Length, (className, bp), static (dst, s) =>
+        {
+            s.bp.AsSpan().CopyTo(dst);
+            int idx = s.bp.Length;
+            dst[idx++] = '-';
+            s.className.AsSpan().CopyTo(dst[idx..]);
+        });
+    }
+}

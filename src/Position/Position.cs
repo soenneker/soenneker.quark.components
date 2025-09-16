@@ -1,3 +1,5 @@
+using Soenneker.Quark.Enums.GlobalKeywords;
+
 namespace Soenneker.Quark.Components.Position;
 
 /// <summary>
@@ -29,4 +31,10 @@ public static class Position
     /// Sticky positioning.
     /// </summary>
     public static PositionBuilder Sticky => new("sticky");
+
+    public static PositionBuilder Inherit => new(GlobalKeyword.InheritValue);
+    public static PositionBuilder Initial => new(GlobalKeyword.InitialValue);
+    public static PositionBuilder Revert => new(GlobalKeyword.RevertValue);
+    public static PositionBuilder RevertLayer => new(GlobalKeyword.RevertLayerValue);
+    public static PositionBuilder Unset => new(GlobalKeyword.UnsetValue);
 }

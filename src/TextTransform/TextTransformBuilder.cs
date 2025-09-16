@@ -1,6 +1,7 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using Soenneker.Extensions.String;
+using System.Runtime.CompilerServices;
+using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 
@@ -8,7 +9,12 @@ namespace Soenneker.Quark.Components.TextTransform;
 
 public sealed class TextTransformBuilder : ICssBuilder
 {
-    private readonly List<TextTransformRule> _rules = [];
+    private readonly List<TextTransformRule> _rules = new(4);
+
+    private const string _classLower = "text-lowercase";
+    private const string _classUpper = "text-uppercase";
+    private const string _classCap = "text-capitalize";
+    private const string _stylePrefix = "text-transform: ";
 
     internal TextTransformBuilder(string value, Breakpoint? breakpoint = null)
     {
@@ -17,12 +23,18 @@ public sealed class TextTransformBuilder : ICssBuilder
 
     internal TextTransformBuilder(List<TextTransformRule> rules)
     {
-        _rules.AddRange(rules);
+        if (rules is { Count: > 0 })
+            _rules.AddRange(rules);
     }
 
-    public TextTransformBuilder Lowercase => Chain("lowercase");
-    public TextTransformBuilder Uppercase => Chain("uppercase");
-    public TextTransformBuilder Capitalize => Chain("capitalize");
+    public TextTransformBuilder Lowercase => Chain(Enums.TextTransforms.TextTransform.LowercaseValue);
+    public TextTransformBuilder Uppercase => Chain(Enums.TextTransforms.TextTransform.UppercaseValue);
+    public TextTransformBuilder Capitalize => Chain(Enums.TextTransforms.TextTransform.CapitalizeValue);
+    public TextTransformBuilder Inherit => Chain(Enums.GlobalKeywords.GlobalKeyword.InheritValue);
+    public TextTransformBuilder Initial => Chain(Enums.GlobalKeywords.GlobalKeyword.InitialValue);
+    public TextTransformBuilder Revert => Chain(Enums.GlobalKeywords.GlobalKeyword.RevertValue);
+    public TextTransformBuilder RevertLayer => Chain(Enums.GlobalKeywords.GlobalKeyword.RevertLayerValue);
+    public TextTransformBuilder Unset => Chain(Enums.GlobalKeywords.GlobalKeyword.UnsetValue);
 
     public TextTransformBuilder OnPhone => ChainBp(Breakpoint.Phone);
     public TextTransformBuilder OnMobile => ChainBp(Breakpoint.Mobile);
@@ -31,69 +43,85 @@ public sealed class TextTransformBuilder : ICssBuilder
     public TextTransformBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
     public TextTransformBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private TextTransformBuilder Chain(string value)
     {
-        var list = new List<TextTransformRule>(_rules) { new TextTransformRule(value, null) };
-        return new TextTransformBuilder(list);
+        _rules.Add(new TextTransformRule(value, null));
+        return this;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private TextTransformBuilder ChainBp(Breakpoint bp)
     {
-        TextTransformRule last = _rules.LastOrDefault();
-        if (last.Value == null)
-            return new TextTransformBuilder("lowercase", bp);
+        if (_rules.Count == 0)
+        {
+            _rules.Add(new TextTransformRule(Enums.TextTransforms.TextTransform.LowercaseValue, bp));
+            return this;
+        }
 
-        var list = new List<TextTransformRule>(_rules);
-        list[list.Count - 1] = new TextTransformRule(last.Value, bp);
-        return new TextTransformBuilder(list);
+        int lastIdx = _rules.Count - 1;
+        TextTransformRule last = _rules[lastIdx];
+        _rules[lastIdx] = new TextTransformRule(last.Value, bp);
+        return this;
     }
 
     public string ToClass()
     {
         if (_rules.Count == 0) return string.Empty;
-        var classes = new List<string>(_rules.Count);
-        foreach (TextTransformRule rule in _rules)
+
+        using var sb = new PooledStringBuilder();
+        var first = true;
+        for (var i = 0; i < _rules.Count; i++)
         {
+            TextTransformRule rule = _rules[i];
             string cls = rule.Value switch
             {
-                "lowercase" => "text-lowercase",
-                "uppercase" => "text-uppercase",
-                "capitalize" => "text-capitalize",
+                Enums.TextTransforms.TextTransform.LowercaseValue => _classLower,
+                Enums.TextTransforms.TextTransform.UppercaseValue => _classUpper,
+                Enums.TextTransforms.TextTransform.CapitalizeValue => _classCap,
                 _ => string.Empty
             };
-            if (cls.HasContent())
-            {
-                string bp = GetBp(rule.Breakpoint);
-                string className = cls;
-                if (bp.HasContent())
-                {
-                    int dashIndex = className.IndexOf('-');
-                    if (dashIndex > 0)
-                        className = $"{className.Substring(0, dashIndex)}-{bp}{className.Substring(dashIndex)}";
-                    else
-                        className = $"{bp}-{className}";
-                }
-                classes.Add(className);
-            }
+            if (cls.Length == 0)
+                continue;
+
+            string bp = GetBp(rule.Breakpoint);
+            if (bp.Length != 0)
+                cls = InsertBreakpoint(cls, bp);
+
+            if (!first) sb.Append(' ');
+            else first = false;
+
+            sb.Append(cls);
         }
-        return string.Join(" ", classes);
+        return sb.ToString();
     }
 
     public string ToStyle()
     {
         if (_rules.Count == 0) return string.Empty;
-        var styles = new List<string>(_rules.Count);
-        foreach (TextTransformRule rule in _rules)
+
+        using var sb = new PooledStringBuilder();
+        var first = true;
+        for (var i = 0; i < _rules.Count; i++)
         {
-            string? css = $"text-transform: {rule.Value}";
-            if (css.HasContent()) styles.Add(css);
+            TextTransformRule rule = _rules[i];
+            string val = rule.Value;
+            if (string.IsNullOrEmpty(val))
+                continue;
+
+            if (!first) sb.Append("; ");
+            else first = false;
+
+            sb.Append(_stylePrefix);
+            sb.Append(val);
         }
-        return string.Join("; ", styles);
+        return sb.ToString();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetBp(Breakpoint? breakpoint)
     {
-        if (breakpoint == null) return string.Empty;
+        if (breakpoint is null) return string.Empty;
         switch (breakpoint)
         {
             case Breakpoint.PhoneValue:
@@ -116,6 +144,33 @@ public sealed class TextTransformBuilder : ICssBuilder
             default:
                 return string.Empty;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string InsertBreakpoint(string className, string bp)
+    {
+        int dashIndex = className.IndexOf('-');
+        if (dashIndex > 0)
+        {
+            int len = dashIndex + 1 + bp.Length + (className.Length - dashIndex);
+            return string.Create(len, (className, dashIndex, bp), static (dst, s) =>
+            {
+                s.className.AsSpan(0, s.dashIndex).CopyTo(dst);
+                int idx = s.dashIndex;
+                dst[idx++] = '-';
+                s.bp.AsSpan().CopyTo(dst[idx..]);
+                idx += s.bp.Length;
+                s.className.AsSpan(s.dashIndex).CopyTo(dst[idx..]);
+            });
+        }
+
+        return string.Create(bp.Length + 1 + className.Length, (className, bp), static (dst, s) =>
+        {
+            s.bp.AsSpan().CopyTo(dst);
+            int idx = s.bp.Length;
+            dst[idx++] = '-';
+            s.className.AsSpan().CopyTo(dst[idx..]);
+        });
     }
 }
 

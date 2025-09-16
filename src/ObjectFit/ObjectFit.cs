@@ -1,3 +1,5 @@
+using Soenneker.Quark.Enums.GlobalKeywords;
+
 namespace Soenneker.Quark.Components.ObjectFit;
 
 /// <summary>
@@ -29,6 +31,12 @@ public static class ObjectFit
     /// object-fit: none.
     /// </summary>
     public static ObjectFitBuilder None => new("none");
+
+    public static ObjectFitBuilder Inherit => new(GlobalKeyword.InheritValue);
+    public static ObjectFitBuilder Initial => new(GlobalKeyword.InitialValue);
+    public static ObjectFitBuilder Revert => new(GlobalKeyword.RevertValue);
+    public static ObjectFitBuilder RevertLayer => new(GlobalKeyword.RevertLayerValue);
+    public static ObjectFitBuilder Unset => new(GlobalKeyword.UnsetValue);
 }
 
 

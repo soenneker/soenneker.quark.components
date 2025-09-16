@@ -1,17 +1,35 @@
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using Soenneker.Extensions.String;
+using System.Runtime.CompilerServices;
+using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 
 namespace Soenneker.Quark.Components.TextSize;
 
 /// <summary>
-/// Simplified text size builder with fluent API for chaining text size rules.
+/// High-performance text size builder with fluent API for chaining text size rules.
 /// </summary>
 public sealed class TextSizeBuilder : ICssBuilder
 {
-    private readonly List<TextSizeRule> _rules = [];
+    private readonly List<TextSizeRule> _rules = new(4);
+
+    // ----- Class name constants -----
+    private const string _fs6 = "fs-6";
+    private const string _fs5 = "fs-5";
+    private const string _fs4 = "fs-4";
+    private const string _fs3 = "fs-3";
+    private const string _fs2 = "fs-2";
+    private const string _fs1 = "fs-1";
+    private const string _display6 = "display-6";
+    private const string _display5 = "display-5";
+    private const string _display4 = "display-4";
+    private const string _display3 = "display-3";
+    private const string _display2 = "display-2";
+    private const string _display1 = "display-1";
+
+    // ----- CSS prefix (compile-time) -----
+    private const string _fontSizePrefix = "font-size: ";
 
     internal TextSizeBuilder(string size, Breakpoint? breakpoint = null)
     {
@@ -20,200 +38,145 @@ public sealed class TextSizeBuilder : ICssBuilder
 
     internal TextSizeBuilder(List<TextSizeRule> rules)
     {
-        _rules.AddRange(rules);
+        if (rules is { Count: > 0 })
+            _rules.AddRange(rules);
     }
 
-    /// <summary>
-    /// Chain with extra small text size for the next rule.
-    /// </summary>
-    public TextSizeBuilder Xs => ChainWithSize("xs");
+    // ----- Fluent size chaining -----
+    public TextSizeBuilder Xs => ChainSize("xs");
+    public TextSizeBuilder Sm => ChainSize("sm");
+    public TextSizeBuilder Base => ChainSize("base");
+    public TextSizeBuilder Lg => ChainSize("lg");
+    public TextSizeBuilder Xl => ChainSize("xl");
+    public TextSizeBuilder Xl2 => ChainSize("2xl");
+    public TextSizeBuilder Xl3 => ChainSize("3xl");
+    public TextSizeBuilder Xl4 => ChainSize("4xl");
+    public TextSizeBuilder Xl5 => ChainSize("5xl");
+    public TextSizeBuilder Xl6 => ChainSize("6xl");
+    public TextSizeBuilder Xl7 => ChainSize("7xl");
+    public TextSizeBuilder Xl8 => ChainSize("8xl");
+    public TextSizeBuilder Xl9 => ChainSize("9xl");
 
-    /// <summary>
-    /// Chain with small text size for the next rule.
-    /// </summary>
-    public TextSizeBuilder Sm => ChainWithSize("sm");
+    // ----- Breakpoint chaining -----
+    public TextSizeBuilder OnPhone => ChainBp(Breakpoint.Phone);
+    public TextSizeBuilder OnMobile => ChainBp(Breakpoint.Mobile);
+    public TextSizeBuilder OnTablet => ChainBp(Breakpoint.Tablet);
+    public TextSizeBuilder OnLaptop => ChainBp(Breakpoint.Laptop);
+    public TextSizeBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
+    public TextSizeBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
 
-    /// <summary>
-    /// Chain with base text size for the next rule.
-    /// </summary>
-    public TextSizeBuilder Base => ChainWithSize("base");
-
-    /// <summary>
-    /// Chain with large text size for the next rule.
-    /// </summary>
-    public TextSizeBuilder Lg => ChainWithSize("lg");
-
-    /// <summary>
-    /// Chain with extra large text size for the next rule.
-    /// </summary>
-    public TextSizeBuilder Xl => ChainWithSize("xl");
-
-    /// <summary>
-    /// Chain with 2X large text size for the next rule.
-    /// </summary>
-    public TextSizeBuilder Xl2 => ChainWithSize("2xl");
-
-    /// <summary>
-    /// Chain with 3X large text size for the next rule.
-    /// </summary>
-    public TextSizeBuilder Xl3 => ChainWithSize("3xl");
-
-    /// <summary>
-    /// Chain with 4X large text size for the next rule.
-    /// </summary>
-    public TextSizeBuilder Xl4 => ChainWithSize("4xl");
-
-    /// <summary>
-    /// Chain with 5X large text size for the next rule.
-    /// </summary>
-    public TextSizeBuilder Xl5 => ChainWithSize("5xl");
-
-    /// <summary>
-    /// Chain with 6X large text size for the next rule.
-    /// </summary>
-    public TextSizeBuilder Xl6 => ChainWithSize("6xl");
-
-    /// <summary>
-    /// Chain with 7X large text size for the next rule.
-    /// </summary>
-    public TextSizeBuilder Xl7 => ChainWithSize("7xl");
-
-    /// <summary>
-    /// Chain with 8X large text size for the next rule.
-    /// </summary>
-    public TextSizeBuilder Xl8 => ChainWithSize("8xl");
-
-    /// <summary>
-    /// Chain with 9X large text size for the next rule.
-    /// </summary>
-    public TextSizeBuilder Xl9 => ChainWithSize("9xl");
-
-    /// <summary>
-    /// Apply on phone devices (portrait phones, less than 576px).
-    /// </summary>
-    public TextSizeBuilder OnPhone => ChainWithBreakpoint(Breakpoint.Phone);
-
-    /// <summary>
-    /// Apply on mobile devices (landscape phones, 576px and up).
-    /// </summary>
-    public TextSizeBuilder OnMobile => ChainWithBreakpoint(Breakpoint.Mobile);
-
-    /// <summary>
-    /// Apply on tablet devices (tablets, 768px and up).
-    /// </summary>
-    public TextSizeBuilder OnTablet => ChainWithBreakpoint(Breakpoint.Tablet);
-
-    /// <summary>
-    /// Apply on laptop devices (laptops, 992px and up).
-    /// </summary>
-    public TextSizeBuilder OnLaptop => ChainWithBreakpoint(Breakpoint.Laptop);
-
-    /// <summary>
-    /// Apply on desktop devices (desktops, 1200px and up).
-    /// </summary>
-    public TextSizeBuilder OnDesktop => ChainWithBreakpoint(Breakpoint.Desktop);
-
-    /// <summary>
-    /// Apply on wide screen devices (larger desktops, 1400px and up).
-    /// </summary>
-    public TextSizeBuilder OnWideScreen => ChainWithBreakpoint(Breakpoint.ExtraExtraLarge);
-
-    private TextSizeBuilder ChainWithSize(string size)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private TextSizeBuilder ChainSize(string size)
     {
-        var newRules = new List<TextSizeRule>(_rules) { new TextSizeRule(size, null) };
-        return new TextSizeBuilder(newRules);
+        _rules.Add(new TextSizeRule(size, null));
+        return this;
     }
 
-    private TextSizeBuilder ChainWithBreakpoint(Breakpoint breakpoint)
+    /// <summary>Apply a breakpoint to the most recent rule (or bootstrap with "base" if empty).</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private TextSizeBuilder ChainBp(Breakpoint bp)
     {
-        TextSizeRule? lastRule = _rules.LastOrDefault();
-        if (lastRule == null)
-            return new TextSizeBuilder("base", breakpoint);
+        if (_rules.Count == 0)
+        {
+            _rules.Add(new TextSizeRule("base", bp));
+            return this;
+        }
 
-        var newRules = new List<TextSizeRule>(_rules);
-        // Update the last rule with the new breakpoint
-        newRules[newRules.Count - 1] = new TextSizeRule(lastRule.Size, breakpoint);
-        return new TextSizeBuilder(newRules);
+        int lastIdx = _rules.Count - 1;
+        TextSizeRule last = _rules[lastIdx];
+        _rules[lastIdx] = new TextSizeRule(last.Size, bp);
+        return this;
     }
 
-    /// <summary>
-    /// Gets the CSS class string for the current configuration.
-    /// </summary>
+    /// <summary>Gets the CSS class string for the current configuration.</summary>
     public string ToClass()
     {
         if (_rules.Count == 0)
             return string.Empty;
 
-        var classes = new List<string>(_rules.Count);
+        using var sb = new PooledStringBuilder();
+        var first = true;
 
-        foreach (TextSizeRule rule in _rules)
+        for (var i = 0; i < _rules.Count; i++)
         {
+            TextSizeRule rule = _rules[i];
+
             string sizeClass = GetSizeClass(rule.Size);
-            string breakpointClass = GetBreakpointClass(rule.Breakpoint);
+            if (sizeClass.Length == 0)
+                continue;
 
-            if (sizeClass.HasContent())
-            {
-                string className = sizeClass;
-                if (breakpointClass.HasContent())
-                {
-                    int dashIndex = className.IndexOf('-');
-                    if (dashIndex > 0)
-                        className = $"{className.Substring(0, dashIndex)}-{breakpointClass}{className.Substring(dashIndex)}";
-                    else
-                        className = $"{breakpointClass}-{className}";
-                }
+            string bp = GetBreakpointClass(rule.Breakpoint);
+            if (bp.Length != 0)
+                sizeClass = InsertBreakpoint(sizeClass, bp);
 
-                classes.Add(className);
-            }
+            if (!first)
+                sb.Append(' ');
+            else
+                first = false;
+
+            sb.Append(sizeClass);
         }
 
-        return string.Join(" ", classes);
+        return sb.ToString();
     }
 
-    /// <summary>
-    /// Gets the CSS style string for the current configuration.
-    /// </summary>
+    /// <summary>Gets the CSS style string for the current configuration.</summary>
     public string ToStyle()
     {
         if (_rules.Count == 0)
             return string.Empty;
 
-        var styles = new List<string>(_rules.Count);
+        using var sb = new PooledStringBuilder();
+        var first = true;
 
-        foreach (TextSizeRule rule in _rules)
+        for (var i = 0; i < _rules.Count; i++)
         {
-            string? sizeValue = GetSizeValue(rule.Size);
-            if (sizeValue == null) continue;
+            TextSizeRule rule = _rules[i];
 
-            styles.Add($"font-size: {sizeValue}");
+            string? sizeValue = GetSizeValue(rule.Size);
+            if (sizeValue is null)
+                continue;
+
+            if (!first)
+                sb.Append("; ");
+            else
+                first = false;
+
+            sb.Append(_fontSizePrefix);
+            sb.Append(sizeValue);
         }
 
-        return string.Join("; ", styles);
+        return sb.ToString();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetSizeClass(string size)
     {
+        // Bootstrap 5 font-scale mapping
         return size switch
         {
-            "xs" => "fs-6",
-            "sm" => "fs-5",
-            "base" => "fs-4",
-            "lg" => "fs-3",
-            "xl" => "fs-2",
-            "2xl" => "fs-1",
-            "3xl" => "display-6",
-            "4xl" => "display-5",
-            "5xl" => "display-4",
-            "6xl" => "display-3",
-            "7xl" => "display-2",
-            "8xl" => "display-1",
-            "9xl" => "display-1", // Bootstrap doesn't have display-0, so use display-1
+            "xs" => _fs6,
+            "sm" => _fs5,
+            "base" => _fs4,
+            "lg" => _fs3,
+            "xl" => _fs2,
+            "2xl" => _fs1,
+
+            "3xl" => _display6,
+            "4xl" => _display5,
+            "5xl" => _display4,
+            "6xl" => _display3,
+            "7xl" => _display2,
+            "8xl" => _display1,
+            "9xl" => _display1, // no display-0; clamp
             _ => string.Empty
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string? GetSizeValue(string size)
     {
+        // Tailored inline values for when you need styles instead of classes
         return size switch
         {
             "xs" => "0.75rem",
@@ -233,31 +196,78 @@ public sealed class TextSizeBuilder : ICssBuilder
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetBreakpointClass(Breakpoint? breakpoint)
     {
-        if (breakpoint == null) return string.Empty;
+        if (breakpoint is null)
+            return string.Empty;
 
+        // Classic switch for Intellenum *Value cases
         switch (breakpoint)
         {
             case Breakpoint.PhoneValue:
             case Breakpoint.ExtraSmallValue:
                 return string.Empty;
+
             case Breakpoint.MobileValue:
             case Breakpoint.SmallValue:
                 return "sm";
+
             case Breakpoint.TabletValue:
             case Breakpoint.MediumValue:
                 return "md";
+
             case Breakpoint.LaptopValue:
             case Breakpoint.LargeValue:
                 return "lg";
+
             case Breakpoint.DesktopValue:
             case Breakpoint.ExtraLargeValue:
                 return "xl";
+
             case Breakpoint.ExtraExtraLargeValue:
                 return "xxl";
+
             default:
                 return string.Empty;
         }
+    }
+
+    /// <summary>
+    /// Insert breakpoint token as: "fs-4" + "md" → "fs-md-4".
+    /// Falls back to "bp-{class}" if no dash exists.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string InsertBreakpoint(string className, string bp)
+    {
+        int dashIndex = className.IndexOf('-');
+        if (dashIndex > 0)
+        {
+            // length = prefix + "-" + bp + remainder
+            int len = dashIndex + 1 + bp.Length + (className.Length - dashIndex);
+            return string.Create(len, (className, dashIndex, bp), static (dst, s) =>
+            {
+                // prefix
+                s.className.AsSpan(0, s.dashIndex).CopyTo(dst);
+                int idx = s.dashIndex;
+
+                // "-" + bp
+                dst[idx++] = '-';
+                s.bp.AsSpan().CopyTo(dst[idx..]);
+                idx += s.bp.Length;
+
+                // remainder (starts with '-')
+                s.className.AsSpan(s.dashIndex).CopyTo(dst[idx..]);
+            });
+        }
+
+        // Fallback: "bp-{className}"
+        return string.Create(bp.Length + 1 + className.Length, (className, bp), static (dst, s) =>
+        {
+            s.bp.AsSpan().CopyTo(dst);
+            int idx = s.bp.Length;
+            dst[idx++] = '-';
+            s.className.AsSpan().CopyTo(dst[idx..]);
+        });
     }
 }

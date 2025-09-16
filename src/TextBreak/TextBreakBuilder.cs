@@ -1,6 +1,7 @@
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using Soenneker.Extensions.String;
+using System.Runtime.CompilerServices;
+using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 
@@ -8,7 +9,11 @@ namespace Soenneker.Quark.Components.TextBreak;
 
 public sealed class TextBreakBuilder : ICssBuilder
 {
-    private readonly List<TextBreakRule> _rules = [];
+    private readonly List<TextBreakRule> _rules = new(4);
+
+    // ----- Class/Style constants -----
+    private const string _classTextBreak = "text-break";
+    private const string _styleBreakWord = "word-wrap: break-word"; // keep alias to match your original
 
     internal TextBreakBuilder(bool enabled, Breakpoint? breakpoint = null)
     {
@@ -17,7 +22,8 @@ public sealed class TextBreakBuilder : ICssBuilder
 
     internal TextBreakBuilder(List<TextBreakRule> rules)
     {
-        _rules.AddRange(rules);
+        if (rules is { Count: > 0 })
+            _rules.AddRange(rules);
     }
 
     public TextBreakBuilder Enable => Chain(true);
@@ -30,62 +36,86 @@ public sealed class TextBreakBuilder : ICssBuilder
     public TextBreakBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
     public TextBreakBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private TextBreakBuilder Chain(bool enabled)
     {
-        var list = new List<TextBreakRule>(_rules) { new TextBreakRule(enabled, null) };
-        return new TextBreakBuilder(list);
+        _rules.Add(new TextBreakRule(enabled, null));
+        return this;
     }
 
+    /// <summary>Apply a breakpoint to the most recent rule (or bootstrap with <c>true</c> if empty).</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private TextBreakBuilder ChainBp(Breakpoint bp)
     {
-        TextBreakRule last = _rules.LastOrDefault();
-        if (!last.Enabled)
-            return new TextBreakBuilder(true, bp);
+        if (_rules.Count == 0)
+        {
+            _rules.Add(new TextBreakRule(true, bp));
+            return this;
+        }
 
-        var list = new List<TextBreakRule>(_rules);
-        list[list.Count - 1] = new TextBreakRule(last.Enabled, bp);
-        return new TextBreakBuilder(list);
+        int lastIdx = _rules.Count - 1;
+        TextBreakRule last = _rules[lastIdx];
+        _rules[lastIdx] = new TextBreakRule(last.Enabled, bp);
+        return this;
     }
 
     public string ToClass()
     {
-        if (_rules.Count == 0) return string.Empty;
-        var classes = new List<string>(_rules.Count);
-        foreach (TextBreakRule rule in _rules)
+        if (_rules.Count == 0)
+            return string.Empty;
+
+        using var sb = new PooledStringBuilder();
+        var first = true;
+
+        for (var i = 0; i < _rules.Count; i++)
         {
-            string cls = rule.Enabled ? "text-break" : string.Empty;
-            if (cls.HasContent())
-            {
-                string bp = GetBp(rule.Breakpoint);
-                string className = cls;
-                if (bp.HasContent())
-                {
-                    int dashIndex = className.IndexOf('-');
-                    if (dashIndex > 0)
-                        className = $"{className.Substring(0, dashIndex)}-{bp}{className.Substring(dashIndex)}";
-                    else
-                        className = $"{bp}-{className}";
-                }
-                classes.Add(className);
-            }
+            TextBreakRule rule = _rules[i];
+            if (!rule.Enabled)
+                continue;
+
+            string baseClass = _classTextBreak;
+
+            string bp = GetBp(rule.Breakpoint);
+            if (bp.Length != 0)
+                baseClass = InsertBreakpoint(baseClass, bp);
+
+            if (!first) sb.Append(' ');
+            else first = false;
+
+            sb.Append(baseClass);
         }
-        return string.Join(" ", classes);
+
+        return sb.ToString();
     }
 
     public string ToStyle()
     {
-        if (_rules.Count == 0) return string.Empty;
-        var styles = new List<string>(_rules.Count);
-        foreach (TextBreakRule rule in _rules)
+        if (_rules.Count == 0)
+            return string.Empty;
+
+        using var sb = new PooledStringBuilder();
+        var first = true;
+
+        for (var i = 0; i < _rules.Count; i++)
         {
-            if (rule.Enabled) styles.Add("word-wrap: break-word");
+            if (!_rules[i].Enabled)
+                continue;
+
+            if (!first) sb.Append("; ");
+            else first = false;
+
+            sb.Append(_styleBreakWord);
         }
-        return string.Join("; ", styles);
+
+        return sb.ToString();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetBp(Breakpoint? breakpoint)
     {
-        if (breakpoint == null) return string.Empty;
+        if (breakpoint is null)
+            return string.Empty;
+
         switch (breakpoint)
         {
             case Breakpoint.PhoneValue:
@@ -109,6 +139,42 @@ public sealed class TextBreakBuilder : ICssBuilder
                 return string.Empty;
         }
     }
-}
 
- 
+    /// <summary>
+    /// Insert breakpoint token as: "text-break" + "md" → "text-md-break".
+    /// Falls back to "bp-{class}" if no dash exists.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string InsertBreakpoint(string className, string bp)
+    {
+        int dashIndex = className.IndexOf('-');
+        if (dashIndex > 0)
+        {
+            // length = prefix + "-" + bp + remainder
+            int len = dashIndex + 1 + bp.Length + (className.Length - dashIndex);
+            return string.Create(len, (className, dashIndex, bp), static (dst, s) =>
+            {
+                // prefix
+                s.className.AsSpan(0, s.dashIndex).CopyTo(dst);
+                int idx = s.dashIndex;
+
+                // "-" + bp
+                dst[idx++] = '-';
+                s.bp.AsSpan().CopyTo(dst[idx..]);
+                idx += s.bp.Length;
+
+                // remainder (starts with '-')
+                s.className.AsSpan(s.dashIndex).CopyTo(dst[idx..]);
+            });
+        }
+
+        // Fallback: "bp-{className}"
+        return string.Create(bp.Length + 1 + className.Length, (className, bp), static (dst, s) =>
+        {
+            s.bp.AsSpan().CopyTo(dst);
+            int idx = s.bp.Length;
+            dst[idx++] = '-';
+            s.className.AsSpan().CopyTo(dst[idx..]);
+        });
+    }
+}

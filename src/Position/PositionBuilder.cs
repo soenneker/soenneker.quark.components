@@ -1,17 +1,28 @@
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using Soenneker.Extensions.String;
+using System.Runtime.CompilerServices;
+using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 
 namespace Soenneker.Quark.Components.Position;
 
 /// <summary>
-/// Simplified position builder with fluent API for chaining position rules.
+/// High-performance position builder with fluent API for chaining position rules.
 /// </summary>
 public sealed class PositionBuilder : ICssBuilder
 {
-    private readonly List<PositionRule> _rules = [];
+    private readonly List<PositionRule> _rules = new(4);
+
+    // ----- Class name constants -----
+    private const string _classStatic = "position-static";
+    private const string _classRelative = "position-relative";
+    private const string _classAbsolute = "position-absolute";
+    private const string _classFixed = "position-fixed";
+    private const string _classSticky = "position-sticky";
+
+    // ----- CSS prefix -----
+    private const string _positionPrefix = "position: ";
 
     internal PositionBuilder(string position, Breakpoint? breakpoint = null)
     {
@@ -20,153 +31,137 @@ public sealed class PositionBuilder : ICssBuilder
 
     internal PositionBuilder(List<PositionRule> rules)
     {
-        _rules.AddRange(rules);
+        if (rules is { Count: > 0 })
+            _rules.AddRange(rules);
     }
 
-    /// <summary>
-    /// Chain with static positioning for the next rule.
-    /// </summary>
-    public PositionBuilder Static => ChainWithPosition("static");
+    /// <summary>Chain with static positioning for the next rule.</summary>
+    public PositionBuilder Static => ChainWithPosition(Enums.Positions.Position.StaticValue);
+    /// <summary>Chain with relative positioning for the next rule.</summary>
+    public PositionBuilder Relative => ChainWithPosition(Enums.Positions.Position.RelativeValue);
+    /// <summary>Chain with absolute positioning for the next rule.</summary>
+    public PositionBuilder Absolute => ChainWithPosition(Enums.Positions.Position.AbsoluteValue);
+    /// <summary>Chain with fixed positioning for the next rule.</summary>
+    public PositionBuilder Fixed => ChainWithPosition(Enums.Positions.Position.FixedValue);
+    /// <summary>Chain with sticky positioning for the next rule.</summary>
+    public PositionBuilder Sticky => ChainWithPosition(Enums.Positions.Position.StickyValue);
 
-    /// <summary>
-    /// Chain with relative positioning for the next rule.
-    /// </summary>
-    public PositionBuilder Relative => ChainWithPosition("relative");
+    public PositionBuilder Inherit => ChainWithPosition(Enums.GlobalKeywords.GlobalKeyword.InheritValue);
+    public PositionBuilder Initial => ChainWithPosition(Enums.GlobalKeywords.GlobalKeyword.InitialValue);
+    public PositionBuilder Revert => ChainWithPosition(Enums.GlobalKeywords.GlobalKeyword.RevertValue);
+    public PositionBuilder RevertLayer => ChainWithPosition(Enums.GlobalKeywords.GlobalKeyword.RevertLayerValue);
+    public PositionBuilder Unset => ChainWithPosition(Enums.GlobalKeywords.GlobalKeyword.UnsetValue);
 
-    /// <summary>
-    /// Chain with absolute positioning for the next rule.
-    /// </summary>
-    public PositionBuilder Absolute => ChainWithPosition("absolute");
-
-    /// <summary>
-    /// Chain with fixed positioning for the next rule.
-    /// </summary>
-    public PositionBuilder Fixed => ChainWithPosition("fixed");
-
-    /// <summary>
-    /// Chain with sticky positioning for the next rule.
-    /// </summary>
-    public PositionBuilder Sticky => ChainWithPosition("sticky");
-
-    /// <summary>
-    /// Apply on phone devices (portrait phones, less than 576px).
-    /// </summary>
+    // ----- Breakpoint chaining -----
     public PositionBuilder OnPhone => ChainWithBreakpoint(Breakpoint.Phone);
-
-    /// <summary>
-    /// Apply on mobile devices (landscape phones, 576px and up).
-    /// </summary>
     public PositionBuilder OnMobile => ChainWithBreakpoint(Breakpoint.Mobile);
-
-    /// <summary>
-    /// Apply on tablet devices (tablets, 768px and up).
-    /// </summary>
     public PositionBuilder OnTablet => ChainWithBreakpoint(Breakpoint.Tablet);
-
-    /// <summary>
-    /// Apply on laptop devices (laptops, 992px and up).
-    /// </summary>
     public PositionBuilder OnLaptop => ChainWithBreakpoint(Breakpoint.Laptop);
-
-    /// <summary>
-    /// Apply on desktop devices (desktops, 1200px and up).
-    /// </summary>
     public PositionBuilder OnDesktop => ChainWithBreakpoint(Breakpoint.Desktop);
-
-    /// <summary>
-    /// Apply on wide screen devices (larger desktops, 1400px and up).
-    /// </summary>
     public PositionBuilder OnWideScreen => ChainWithBreakpoint(Breakpoint.ExtraExtraLarge);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private PositionBuilder ChainWithPosition(string position)
     {
-        var newRules = new List<PositionRule>(_rules) { new PositionRule(position, null) };
-        return new PositionBuilder(newRules);
+        _rules.Add(new PositionRule(position, null));
+        return this;
     }
 
+    /// <summary>Apply a breakpoint to the most recent rule (or bootstrap with "static" if empty).</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private PositionBuilder ChainWithBreakpoint(Breakpoint breakpoint)
     {
-        PositionRule? lastRule = _rules.LastOrDefault();
-        if (lastRule == null)
-            return new PositionBuilder("static", breakpoint);
+        if (_rules.Count == 0)
+        {
+            _rules.Add(new PositionRule(Enums.Positions.Position.StaticValue, breakpoint));
+            return this;
+        }
 
-        var newRules = new List<PositionRule>(_rules);
-        // Update the last rule with the new breakpoint
-        newRules[newRules.Count - 1] = new PositionRule(lastRule.Position, breakpoint);
-        return new PositionBuilder(newRules);
+        int lastIdx = _rules.Count - 1;
+        PositionRule last = _rules[lastIdx];
+        _rules[lastIdx] = new PositionRule(last.Position, breakpoint);
+        return this;
     }
 
-    /// <summary>
-    /// Gets the CSS class string for the current configuration.
-    /// </summary>
+    /// <summary>Gets the CSS class string for the current configuration.</summary>
     public string ToClass()
     {
         if (_rules.Count == 0)
             return string.Empty;
 
-        var classes = new List<string>(_rules.Count);
+        using var sb = new PooledStringBuilder();
+        var first = true;
 
-        foreach (PositionRule rule in _rules)
+        for (var i = 0; i < _rules.Count; i++)
         {
-            string positionClass = GetPositionClass(rule.Position);
-            string breakpointClass = GetBreakpointClass(rule.Breakpoint);
+            PositionRule rule = _rules[i];
 
-            if (positionClass.HasContent())
-            {
-                string className = positionClass;
-                if (breakpointClass.HasContent())
-                {
-                    int dashIndex = className.IndexOf('-');
-                    if (dashIndex > 0)
-                        className = $"{className.Substring(0, dashIndex)}-{breakpointClass}{className.Substring(dashIndex)}";
-                    else
-                        className = $"{breakpointClass}-{className}";
-                }
+            string baseClass = GetPositionClass(rule.Position);
+            if (baseClass.Length == 0)
+                continue;
 
-                classes.Add(className);
-            }
+            string bp = GetBp(rule.Breakpoint);
+            if (bp.Length != 0)
+                baseClass = InsertBreakpoint(baseClass, bp);
+
+            if (!first)
+                sb.Append(' ');
+            else
+                first = false;
+
+            sb.Append(baseClass);
         }
 
-        return string.Join(" ", classes);
+        return sb.ToString();
     }
 
-    /// <summary>
-    /// Gets the CSS style string for the current configuration.
-    /// </summary>
+    /// <summary>Gets the CSS style string for the current configuration.</summary>
     public string ToStyle()
     {
         if (_rules.Count == 0)
             return string.Empty;
 
-        var styles = new List<string>(_rules.Count);
+        using var sb = new PooledStringBuilder();
+        var first = true;
 
-        foreach (PositionRule rule in _rules)
+        for (var i = 0; i < _rules.Count; i++)
         {
-            if (rule.Position.HasContent())
-            {
-                styles.Add($"position: {rule.Position}");
-            }
+            PositionRule rule = _rules[i];
+            if (rule.Position.Length == 0)
+                continue;
+
+            if (!first)
+                sb.Append("; ");
+            else
+                first = false;
+
+            sb.Append(_positionPrefix);
+            sb.Append(rule.Position);
         }
 
-        return string.Join("; ", styles);
+        return sb.ToString();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetPositionClass(string position)
     {
         return position switch
         {
-            "static" => "position-static",
-            "relative" => "position-relative",
-            "absolute" => "position-absolute",
-            "fixed" => "position-fixed",
-            "sticky" => "position-sticky",
+            // Intellenum<string> *Value constants are compile-time consts, safe in switch
+            Enums.Positions.Position.StaticValue => _classStatic,
+            Enums.Positions.Position.RelativeValue => _classRelative,
+            Enums.Positions.Position.AbsoluteValue => _classAbsolute,
+            Enums.Positions.Position.FixedValue => _classFixed,
+            Enums.Positions.Position.StickyValue => _classSticky,
             _ => string.Empty
         };
     }
 
-    private static string GetBreakpointClass(Breakpoint? breakpoint)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string GetBp(Breakpoint? breakpoint)
     {
-        if (breakpoint == null) return string.Empty;
+        if (breakpoint is null)
+            return string.Empty;
 
         switch (breakpoint)
         {
@@ -190,5 +185,43 @@ public sealed class PositionBuilder : ICssBuilder
             default:
                 return string.Empty;
         }
+    }
+
+    /// <summary>
+    /// Insert breakpoint token as: "position-fixed" + "md" → "position-md-fixed".
+    /// Falls back to "bp-{class}" if no dash exists.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string InsertBreakpoint(string className, string bp)
+    {
+        int dashIndex = className.IndexOf('-');
+        if (dashIndex > 0)
+        {
+            // length = prefix + "-" + bp + remainder
+            int len = dashIndex + 1 + bp.Length + (className.Length - dashIndex);
+            return string.Create(len, (className, dashIndex, bp), static (dst, s) =>
+            {
+                // prefix
+                s.className.AsSpan(0, s.dashIndex).CopyTo(dst);
+                int idx = s.dashIndex;
+
+                // "-" + bp
+                dst[idx++] = '-';
+                s.bp.AsSpan().CopyTo(dst[idx..]);
+                idx += s.bp.Length;
+
+                // remainder (starts with '-')
+                s.className.AsSpan(s.dashIndex).CopyTo(dst[idx..]);
+            });
+        }
+
+        // Fallback: "bp-{className}"
+        return string.Create(bp.Length + 1 + className.Length, (className, bp), static (dst, s) =>
+        {
+            s.bp.AsSpan().CopyTo(dst);
+            int idx = s.bp.Length;
+            dst[idx++] = '-';
+            s.className.AsSpan().CopyTo(dst[idx..]);
+        });
     }
 }

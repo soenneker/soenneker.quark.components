@@ -10,12 +10,12 @@ using Soenneker.Quark.Components.Position;
 using Soenneker.Quark.Components.TextSize;
 using Soenneker.Quark.Components.Width;
 using Soenneker.Quark.Dtos.Colors;
-using Soenneker.Quark.Enums.TextAlignments;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Soenneker.Quark.Components.Float;
 using Soenneker.Quark.Components.Shadow;
+using Soenneker.Quark.Components.TextAlignment;
 using Soenneker.Quark.Components.TextDecoration;
 using Soenneker.Quark.Components.TextOverflow;
 using Soenneker.Quark.Components.VerticalAlign;
@@ -123,7 +123,7 @@ public interface IComponent : IDisposable, IAsyncDisposable
     /// <summary>
     /// Gets or sets the CSS <c>text-align</c> value to apply inline.
     /// </summary>
-    TextAlignment? TextAlignment { get; set; }
+    CssValue<TextAlignmentBuilder>? TextAlignment { get; set; }
 
     /// <summary>
     /// Gets or sets the CSS <c>text-decoration-line</c> value to apply inline.

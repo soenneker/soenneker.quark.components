@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
-using Soenneker.Extensions.String;
+using System.Runtime.CompilerServices;
+using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 
@@ -7,7 +9,7 @@ namespace Soenneker.Quark.Components.Opacity;
 
 public sealed class OpacityBuilder : ICssBuilder
 {
-    private readonly List<OpacityRule> _rules = [];
+    private readonly List<OpacityRule> _rules = new(4);
 
     internal OpacityBuilder(int value, Breakpoint? breakpoint = null)
     {
@@ -16,7 +18,8 @@ public sealed class OpacityBuilder : ICssBuilder
 
     internal OpacityBuilder(List<OpacityRule> rules)
     {
-        _rules.AddRange(rules);
+        if (rules is { Count: > 0 })
+            _rules.AddRange(rules);
     }
 
     public OpacityBuilder V0 => Chain(0);
@@ -32,60 +35,75 @@ public sealed class OpacityBuilder : ICssBuilder
     public OpacityBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
     public OpacityBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private OpacityBuilder Chain(int value)
     {
-        var list = new List<OpacityRule>(_rules) { new OpacityRule(value, null) };
-        return new OpacityBuilder(list);
+        _rules.Add(new OpacityRule(value, null));
+        return this;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private OpacityBuilder ChainBp(Breakpoint bp)
     {
         if (_rules.Count == 0)
-            return new OpacityBuilder(100, bp);
+        {
+            _rules.Add(new OpacityRule(100, bp));
+            return this;
+        }
 
-        var list = new List<OpacityRule>(_rules);
-        OpacityRule last = list[list.Count - 1];
-        list[list.Count - 1] = new OpacityRule(last.Value, bp);
-        return new OpacityBuilder(list);
+        int lastIdx = _rules.Count - 1;
+        OpacityRule last = _rules[lastIdx];
+        _rules[lastIdx] = new OpacityRule(last.Value, bp);
+        return this;
     }
 
     public string ToClass()
     {
         if (_rules.Count == 0) return string.Empty;
-        var classes = new List<string>(_rules.Count);
-        foreach (OpacityRule rule in _rules)
+
+        using var sb = new PooledStringBuilder();
+        var first = true;
+        for (var i = 0; i < _rules.Count; i++)
         {
+            OpacityRule rule = _rules[i];
             string cls = GetClass(rule.Value);
-            if (cls.HasContent())
-            {
-                string bp = GetBp(rule.Breakpoint);
-                string className = cls;
-                if (bp.HasContent())
-                {
-                    int dashIndex = className.IndexOf('-'); // "opacity-50" -> insert after "opacity"
-                    if (dashIndex > 0)
-                        className = $"{className.Substring(0, dashIndex)}-{bp}{className.Substring(dashIndex)}"; // opacity-sm-50
-                    else
-                        className = $"{bp}-{className}";
-                }
-                classes.Add(className);
-            }
+            if (cls.Length == 0)
+                continue;
+
+            string bp = GetBp(rule.Breakpoint);
+            if (bp.Length != 0)
+                cls = InsertBreakpoint(cls, bp);
+
+            if (!first) sb.Append(' ');
+            else first = false;
+
+            sb.Append(cls);
         }
-        return string.Join(" ", classes);
+        return sb.ToString();
     }
 
     public string ToStyle()
     {
         if (_rules.Count == 0) return string.Empty;
-        var styles = new List<string>(_rules.Count);
-        foreach (OpacityRule rule in _rules)
+
+        using var sb = new PooledStringBuilder();
+        var first = true;
+        for (var i = 0; i < _rules.Count; i++)
         {
+            OpacityRule rule = _rules[i];
             string? css = GetStyle(rule.Value);
-            if (css.HasContent()) styles.Add(css);
+            if (css is null)
+                continue;
+
+            if (!first) sb.Append("; ");
+            else first = false;
+
+            sb.Append(css);
         }
-        return string.Join("; ", styles);
+        return sb.ToString();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetClass(int value)
     {
         return value switch
@@ -99,6 +117,7 @@ public sealed class OpacityBuilder : ICssBuilder
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string? GetStyle(int value)
     {
         return value switch
@@ -112,9 +131,10 @@ public sealed class OpacityBuilder : ICssBuilder
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetBp(Breakpoint? breakpoint)
     {
-        if (breakpoint == null) return string.Empty;
+        if (breakpoint is null) return string.Empty;
         switch (breakpoint)
         {
             case Breakpoint.PhoneValue:
@@ -137,6 +157,33 @@ public sealed class OpacityBuilder : ICssBuilder
             default:
                 return string.Empty;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string InsertBreakpoint(string className, string bp)
+    {
+        int dashIndex = className.IndexOf('-');
+        if (dashIndex > 0)
+        {
+            int len = dashIndex + 1 + bp.Length + (className.Length - dashIndex);
+            return string.Create(len, (className, dashIndex, bp), static (dst, s) =>
+            {
+                s.className.AsSpan(0, s.dashIndex).CopyTo(dst);
+                int idx = s.dashIndex;
+                dst[idx++] = '-';
+                s.bp.AsSpan().CopyTo(dst[idx..]);
+                idx += s.bp.Length;
+                s.className.AsSpan(s.dashIndex).CopyTo(dst[idx..]);
+            });
+        }
+
+        return string.Create(bp.Length + 1 + className.Length, (className, bp), static (dst, s) =>
+        {
+            s.bp.AsSpan().CopyTo(dst);
+            int idx = s.bp.Length;
+            dst[idx++] = '-';
+            s.className.AsSpan().CopyTo(dst[idx..]);
+        });
     }
 }
 

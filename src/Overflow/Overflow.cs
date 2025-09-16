@@ -1,3 +1,5 @@
+using Soenneker.Quark.Enums.GlobalKeywords;
+
 namespace Soenneker.Quark.Components.Overflow;
 
 /// <summary>
@@ -24,4 +26,10 @@ public static class Overflow
     /// Overflow scroll.
     /// </summary>
     public static OverflowBuilder Scroll => new("scroll");
+
+    public static OverflowBuilder Inherit => new(GlobalKeyword.InheritValue);
+    public static OverflowBuilder Initial => new(GlobalKeyword.InitialValue);
+    public static OverflowBuilder Revert => new(GlobalKeyword.RevertValue);
+    public static OverflowBuilder RevertLayer => new(GlobalKeyword.RevertLayerValue);
+    public static OverflowBuilder Unset => new(GlobalKeyword.UnsetValue);
 }

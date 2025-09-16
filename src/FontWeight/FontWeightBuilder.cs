@@ -1,6 +1,7 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using Soenneker.Extensions.String;
+using System.Runtime.CompilerServices;
+using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 
@@ -8,7 +9,15 @@ namespace Soenneker.Quark.Components.FontWeight;
 
 public sealed class FontWeightBuilder : ICssBuilder
 {
-    private readonly List<FontWeightRule> _rules = [];
+    private readonly List<FontWeightRule> _rules = new(6);
+
+    private const string _classLight = "fw-light";
+    private const string _classNormal = "fw-normal";
+    private const string _classMedium = "fw-medium";
+    private const string _classSemibold = "fw-semibold";
+    private const string _classBold = "fw-bold";
+    private const string _classBolder = "fw-bolder";
+    private const string _stylePrefix = "font-weight: ";
 
     internal FontWeightBuilder(string value, Breakpoint? breakpoint = null)
     {
@@ -17,15 +26,21 @@ public sealed class FontWeightBuilder : ICssBuilder
 
     internal FontWeightBuilder(List<FontWeightRule> rules)
     {
-        _rules.AddRange(rules);
+        if (rules is { Count: > 0 })
+            _rules.AddRange(rules);
     }
 
-    public FontWeightBuilder Light => Chain("light");
-    public FontWeightBuilder Normal => Chain("normal");
-    public FontWeightBuilder Medium => Chain("medium");
-    public FontWeightBuilder Semibold => Chain("semibold");
-    public FontWeightBuilder Bold => Chain("bold");
-    public FontWeightBuilder Bolder => Chain("bolder");
+    public FontWeightBuilder Light => Chain(Enums.FontWeights.FontWeight.LightValue);
+    public FontWeightBuilder Normal => Chain(Enums.FontWeights.FontWeight.NormalValue);
+    public FontWeightBuilder Medium => Chain(Enums.FontWeights.FontWeight.MediumValue);
+    public FontWeightBuilder Semibold => Chain(Enums.FontWeights.FontWeight.SemiboldValue);
+    public FontWeightBuilder Bold => Chain(Enums.FontWeights.FontWeight.BoldValue);
+    public FontWeightBuilder Bolder => Chain(Enums.FontWeights.FontWeight.BolderValue);
+    public FontWeightBuilder Inherit => Chain(Enums.GlobalKeywords.GlobalKeyword.InheritValue);
+    public FontWeightBuilder Initial => Chain(Enums.GlobalKeywords.GlobalKeyword.InitialValue);
+    public FontWeightBuilder Revert => Chain(Enums.GlobalKeywords.GlobalKeyword.RevertValue);
+    public FontWeightBuilder RevertLayer => Chain(Enums.GlobalKeywords.GlobalKeyword.RevertLayerValue);
+    public FontWeightBuilder Unset => Chain(Enums.GlobalKeywords.GlobalKeyword.UnsetValue);
 
     public FontWeightBuilder OnPhone => ChainBp(Breakpoint.Phone);
     public FontWeightBuilder OnMobile => ChainBp(Breakpoint.Mobile);
@@ -34,84 +49,103 @@ public sealed class FontWeightBuilder : ICssBuilder
     public FontWeightBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
     public FontWeightBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private FontWeightBuilder Chain(string value)
     {
-        var list = new List<FontWeightRule>(_rules) { new FontWeightRule(value, null) };
-        return new FontWeightBuilder(list);
+        _rules.Add(new FontWeightRule(value, null));
+        return this;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private FontWeightBuilder ChainBp(Breakpoint bp)
     {
-        FontWeightRule last = _rules.LastOrDefault();
-        if (last.Value == null)
-            return new FontWeightBuilder("normal", bp);
+        if (_rules.Count == 0)
+        {
+            _rules.Add(new FontWeightRule(Enums.FontWeights.FontWeight.NormalValue, bp));
+            return this;
+        }
 
-        var list = new List<FontWeightRule>(_rules);
-        list[list.Count - 1] = new FontWeightRule(last.Value, bp);
-        return new FontWeightBuilder(list);
+        int lastIdx = _rules.Count - 1;
+        FontWeightRule last = _rules[lastIdx];
+        _rules[lastIdx] = new FontWeightRule(last.Value, bp);
+        return this;
     }
 
     public string ToClass()
     {
         if (_rules.Count == 0) return string.Empty;
-        var classes = new List<string>(_rules.Count);
-        foreach (FontWeightRule rule in _rules)
+
+        using var sb = new PooledStringBuilder();
+        var first = true;
+        for (var i = 0; i < _rules.Count; i++)
         {
+            FontWeightRule rule = _rules[i];
             string cls = rule.Value switch
             {
-                "light" => "fw-light",
-                "normal" => "fw-normal",
-                "medium" => "fw-medium",
-                "semibold" => "fw-semibold",
-                "bold" => "fw-bold",
-                "bolder" => "fw-bolder",
+                Enums.FontWeights.FontWeight.LightValue => _classLight,
+                Enums.FontWeights.FontWeight.NormalValue => _classNormal,
+                Enums.FontWeights.FontWeight.MediumValue => _classMedium,
+                Enums.FontWeights.FontWeight.SemiboldValue => _classSemibold,
+                Enums.FontWeights.FontWeight.BoldValue => _classBold,
+                Enums.FontWeights.FontWeight.BolderValue => _classBolder,
                 _ => string.Empty
             };
-            if (cls.HasContent())
-            {
-                string bp = GetBp(rule.Breakpoint);
-                string className = cls;
-                if (bp.HasContent())
-                {
-                    int dashIndex = className.IndexOf('-');
-                    if (dashIndex > 0)
-                        className = $"{className.Substring(0, dashIndex)}-{bp}{className.Substring(dashIndex)}";
-                    else
-                        className = $"{bp}-{className}";
-                }
+            if (cls.Length == 0)
+                continue;
 
-                classes.Add(className);
-            }
+            string bp = GetBp(rule.Breakpoint);
+            if (bp.Length != 0)
+                cls = InsertBreakpoint(cls, bp);
+
+            if (!first) sb.Append(' ');
+            else first = false;
+
+            sb.Append(cls);
         }
-
-        return string.Join(" ", classes);
+        return sb.ToString();
     }
 
     public string ToStyle()
     {
         if (_rules.Count == 0) return string.Empty;
-        var styles = new List<string>(_rules.Count);
-        foreach (FontWeightRule rule in _rules)
+
+        using var sb = new PooledStringBuilder();
+        var first = true;
+        for (var i = 0; i < _rules.Count; i++)
         {
+            FontWeightRule rule = _rules[i];
             string? css = rule.Value switch
             {
-                "light" => "font-weight: 300",
-                "normal" => "font-weight: 400",
-                "medium" => "font-weight: 500",
-                "semibold" => "font-weight: 600",
-                "bold" => "font-weight: 700",
-                "bolder" => "font-weight: bolder",
+                Enums.FontWeights.FontWeight.LightValue => "300",
+                Enums.FontWeights.FontWeight.NormalValue => "400",
+                Enums.FontWeights.FontWeight.MediumValue => "500",
+                Enums.FontWeights.FontWeight.SemiboldValue => "600",
+                Enums.FontWeights.FontWeight.BoldValue => "700",
+                Enums.FontWeights.FontWeight.BolderValue => "bolder",
+                Enums.GlobalKeywords.GlobalKeyword.InheritValue => "inherit",
+                Enums.GlobalKeywords.GlobalKeyword.InitialValue => "initial",
+                Enums.GlobalKeywords.GlobalKeyword.UnsetValue => "unset",
+                Enums.GlobalKeywords.GlobalKeyword.RevertValue => "revert",
+                Enums.GlobalKeywords.GlobalKeyword.RevertLayerValue => "revert-layer",
                 _ => null
             };
-            if (css.HasContent()) styles.Add(css);
+            if (css is null)
+                continue;
+
+            if (!first) sb.Append("; ");
+            else first = false;
+
+            sb.Append(_stylePrefix);
+            sb.Append(css);
         }
 
-        return string.Join("; ", styles);
+        return sb.ToString();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetBp(Breakpoint? breakpoint)
     {
-        if (breakpoint == null) return string.Empty;
+        if (breakpoint is null) return string.Empty;
         switch (breakpoint)
         {
             case Breakpoint.PhoneValue:
@@ -134,5 +168,32 @@ public sealed class FontWeightBuilder : ICssBuilder
             default:
                 return string.Empty;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string InsertBreakpoint(string className, string bp)
+    {
+        int dashIndex = className.IndexOf('-');
+        if (dashIndex > 0)
+        {
+            int len = dashIndex + 1 + bp.Length + (className.Length - dashIndex);
+            return string.Create(len, (className, dashIndex, bp), static (dst, s) =>
+            {
+                s.className.AsSpan(0, s.dashIndex).CopyTo(dst);
+                int idx = s.dashIndex;
+                dst[idx++] = '-';
+                s.bp.AsSpan().CopyTo(dst[idx..]);
+                idx += s.bp.Length;
+                s.className.AsSpan(s.dashIndex).CopyTo(dst[idx..]);
+            });
+        }
+
+        return string.Create(bp.Length + 1 + className.Length, (className, bp), static (dst, s) =>
+        {
+            s.bp.AsSpan().CopyTo(dst);
+            int idx = s.bp.Length;
+            dst[idx++] = '-';
+            s.className.AsSpan().CopyTo(dst[idx..]);
+        });
     }
 }

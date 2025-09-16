@@ -5,59 +5,61 @@ using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 
-namespace Soenneker.Quark.Components.LineHeight;
+namespace Soenneker.Quark.Components.FontStyle;
 
-public sealed class LineHeightBuilder : ICssBuilder
+public sealed class FontStyleBuilder : ICssBuilder
 {
-    private readonly List<LineHeightRule> _rules = new(4);
+    private readonly List<FontStyleRule> _rules = new(4);
 
-    private const string _classLh1 = "lh-1";
-    private const string _classLhSm = "lh-sm";
-    private const string _classLhBase = "lh-base";
-    private const string _classLhLg = "lh-lg";
+    private const string _classItalic = "fst-italic";
+    private const string _classNormal = "fst-normal";
+    private const string _stylePrefix = "font-style: ";
 
-    internal LineHeightBuilder(string value, Breakpoint? breakpoint = null)
+    internal FontStyleBuilder(string value, Breakpoint? breakpoint = null)
     {
-        _rules.Add(new LineHeightRule(value, breakpoint));
+        _rules.Add(new FontStyleRule(value, breakpoint));
     }
 
-    internal LineHeightBuilder(List<LineHeightRule> rules)
+    internal FontStyleBuilder(List<FontStyleRule> rules)
     {
         if (rules is { Count: > 0 })
             _rules.AddRange(rules);
     }
 
-    public LineHeightBuilder L1 => Chain("1");
-    public LineHeightBuilder Sm => Chain("sm");
-    public LineHeightBuilder Base => Chain("base");
-    public LineHeightBuilder Lg => Chain("lg");
+    public FontStyleBuilder Italic => Chain(Enums.FontStyles.FontStyle.ItalicValue);
+    public FontStyleBuilder Normal => Chain(Enums.FontStyles.FontStyle.NormalValue);
+    public FontStyleBuilder Inherit => Chain(Enums.GlobalKeywords.GlobalKeyword.InheritValue);
+    public FontStyleBuilder Initial => Chain(Enums.GlobalKeywords.GlobalKeyword.InitialValue);
+    public FontStyleBuilder Revert => Chain(Enums.GlobalKeywords.GlobalKeyword.RevertValue);
+    public FontStyleBuilder RevertLayer => Chain(Enums.GlobalKeywords.GlobalKeyword.RevertLayerValue);
+    public FontStyleBuilder Unset => Chain(Enums.GlobalKeywords.GlobalKeyword.UnsetValue);
 
-    public LineHeightBuilder OnPhone => ChainBp(Breakpoint.Phone);
-    public LineHeightBuilder OnMobile => ChainBp(Breakpoint.Mobile);
-    public LineHeightBuilder OnTablet => ChainBp(Breakpoint.Tablet);
-    public LineHeightBuilder OnLaptop => ChainBp(Breakpoint.Laptop);
-    public LineHeightBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
-    public LineHeightBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
+    public FontStyleBuilder OnPhone => ChainBp(Breakpoint.Phone);
+    public FontStyleBuilder OnMobile => ChainBp(Breakpoint.Mobile);
+    public FontStyleBuilder OnTablet => ChainBp(Breakpoint.Tablet);
+    public FontStyleBuilder OnLaptop => ChainBp(Breakpoint.Laptop);
+    public FontStyleBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
+    public FontStyleBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private LineHeightBuilder Chain(string value)
+    private FontStyleBuilder Chain(string value)
     {
-        _rules.Add(new LineHeightRule(value, null));
+        _rules.Add(new FontStyleRule(value, null));
         return this;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private LineHeightBuilder ChainBp(Breakpoint bp)
+    private FontStyleBuilder ChainBp(Breakpoint bp)
     {
         if (_rules.Count == 0)
         {
-            _rules.Add(new LineHeightRule("base", bp));
+            _rules.Add(new FontStyleRule(Enums.FontStyles.FontStyle.NormalValue, bp));
             return this;
         }
 
         int lastIdx = _rules.Count - 1;
-        LineHeightRule last = _rules[lastIdx];
-        _rules[lastIdx] = new LineHeightRule(last.Value, bp);
+        FontStyleRule last = _rules[lastIdx];
+        _rules[lastIdx] = new FontStyleRule(last.Value, bp);
         return this;
     }
 
@@ -69,13 +71,11 @@ public sealed class LineHeightBuilder : ICssBuilder
         var first = true;
         for (var i = 0; i < _rules.Count; i++)
         {
-            LineHeightRule rule = _rules[i];
+            FontStyleRule rule = _rules[i];
             string cls = rule.Value switch
             {
-                "1" => _classLh1,
-                "sm" => _classLhSm,
-                "base" => _classLhBase,
-                "lg" => _classLhLg,
+                Enums.FontStyles.FontStyle.ItalicValue => _classItalic,
+                Enums.FontStyles.FontStyle.NormalValue => _classNormal,
                 _ => string.Empty
             };
             if (cls.Length == 0)
@@ -101,22 +101,16 @@ public sealed class LineHeightBuilder : ICssBuilder
         var first = true;
         for (var i = 0; i < _rules.Count; i++)
         {
-            LineHeightRule rule = _rules[i];
-            string? css = rule.Value switch
-            {
-                "1" => "1",
-                "sm" => "1.25",
-                "base" => "1.5",
-                "lg" => "2",
-                _ => null
-            };
-            if (css is null) continue;
+            FontStyleRule rule = _rules[i];
+            string val = rule.Value;
+            if (string.IsNullOrEmpty(val))
+                continue;
 
             if (!first) sb.Append("; ");
             else first = false;
 
-            sb.Append("line-height: ");
-            sb.Append(css);
+            sb.Append(_stylePrefix);
+            sb.Append(val);
         }
         return sb.ToString();
     }

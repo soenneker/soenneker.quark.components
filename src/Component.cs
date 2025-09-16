@@ -19,7 +19,6 @@ using Soenneker.Quark.Components.Flex;
 using Soenneker.Quark.Components.Gap;
 using Soenneker.Quark.Components.Border;
 using Soenneker.Quark.Components.TextOverflow;
-using Soenneker.Quark.Components.TextAlign;
 using Soenneker.Quark.Components.TextDecoration;
 using Soenneker.Quark.Components.VerticalAlign;
 using Soenneker.Quark.Components.Opacity;
@@ -28,18 +27,18 @@ using Soenneker.Quark.Components.PointerEvents;
 using Soenneker.Quark.Components.UserSelect;
 using Soenneker.Quark.Components.TextTransform;
 using Soenneker.Quark.Components.FontWeight;
-using Soenneker.Quark.Components.FontStyleUtil;
 using Soenneker.Quark.Components.LineHeight;
 using Soenneker.Quark.Components.TextWrap;
 using Soenneker.Quark.Components.TextBreak;
 using Soenneker.Quark.Components.PositionOffset;
 using Soenneker.Quark.Dtos.Colors;
-using Soenneker.Quark.Enums.TextAlignments;
 using Soenneker.Utils.AtomicBool;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Components.Float;
+using Soenneker.Quark.Components.FontStyle;
 using Soenneker.Quark.Components.Shadow;
+using Soenneker.Quark.Components.TextAlignment;
 using Soenneker.Quark.Components.Visibility;
 
 namespace Soenneker.Quark.Components;
@@ -132,10 +131,7 @@ public abstract class Component : ComponentBase, Abstract.IComponent
     public CssValue<ObjectFitBuilder>? ObjectFit { get; set; }
 
     [Parameter]
-    public TextAlignment? TextAlignment { get; set; }
-
-    [Parameter]
-    public CssValue<TextAlignBuilder>? TextAlignCss { get; set; }
+    public CssValue<TextAlignmentBuilder>? TextAlignment { get; set; }
 
     [Parameter]
     public CssValue<TextDecorationBuilder>? TextDecorationLine { get; set; }
@@ -292,7 +288,7 @@ public abstract class Component : ComponentBase, Abstract.IComponent
             AddCss(ref sty, ref cls, Gap);
             AddCss(ref sty, ref cls, Border);
             AddCss(ref sty, ref cls, TextOverflow);
-            AddCss(ref sty, ref cls, TextAlignCss);
+            AddCss(ref sty, ref cls, TextAlignment);
             AddCss(ref sty, ref cls, TextDecorationCss);
             AddCss(ref sty, ref cls, VerticalAlign);
             AddCss(ref sty, ref cls, Float);

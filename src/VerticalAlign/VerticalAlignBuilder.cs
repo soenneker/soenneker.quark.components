@@ -1,6 +1,7 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using Soenneker.Extensions.String;
+using System.Runtime.CompilerServices;
+using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 
@@ -8,7 +9,7 @@ namespace Soenneker.Quark.Components.VerticalAlign;
 
 public sealed class VerticalAlignBuilder : ICssBuilder
 {
-    private readonly List<VerticalAlignRule> _rules = [];
+    private readonly List<VerticalAlignRule> _rules = new(6);
 
     internal VerticalAlignBuilder(string value, Breakpoint? breakpoint = null)
     {
@@ -17,15 +18,21 @@ public sealed class VerticalAlignBuilder : ICssBuilder
 
     internal VerticalAlignBuilder(List<VerticalAlignRule> rules)
     {
-        _rules.AddRange(rules);
+        if (rules is { Count: > 0 })
+            _rules.AddRange(rules);
     }
 
-    public VerticalAlignBuilder Baseline => Chain("baseline");
-    public VerticalAlignBuilder Top => Chain("top");
-    public VerticalAlignBuilder Middle => Chain("middle");
-    public VerticalAlignBuilder Bottom => Chain("bottom");
-    public VerticalAlignBuilder TextTop => Chain("text-top");
-    public VerticalAlignBuilder TextBottom => Chain("text-bottom");
+    public VerticalAlignBuilder Baseline => Chain(Enums.VerticalAligns.VerticalAlign.BaselineValue);
+    public VerticalAlignBuilder Top => Chain(Enums.VerticalAligns.VerticalAlign.TopValue);
+    public VerticalAlignBuilder Middle => Chain(Enums.VerticalAligns.VerticalAlign.MiddleValue);
+    public VerticalAlignBuilder Bottom => Chain(Enums.VerticalAligns.VerticalAlign.BottomValue);
+    public VerticalAlignBuilder TextTop => Chain(Enums.VerticalAligns.VerticalAlign.TextTopValue);
+    public VerticalAlignBuilder TextBottom => Chain(Enums.VerticalAligns.VerticalAlign.TextBottomValue);
+    public VerticalAlignBuilder Inherit => Chain(Enums.GlobalKeywords.GlobalKeyword.InheritValue);
+    public VerticalAlignBuilder Initial => Chain(Enums.GlobalKeywords.GlobalKeyword.InitialValue);
+    public VerticalAlignBuilder Revert => Chain(Enums.GlobalKeywords.GlobalKeyword.RevertValue);
+    public VerticalAlignBuilder RevertLayer => Chain(Enums.GlobalKeywords.GlobalKeyword.RevertLayerValue);
+    public VerticalAlignBuilder Unset => Chain(Enums.GlobalKeywords.GlobalKeyword.UnsetValue);
 
     public VerticalAlignBuilder OnPhone => ChainBp(Breakpoint.Phone);
     public VerticalAlignBuilder OnMobile => ChainBp(Breakpoint.Mobile);
@@ -34,72 +41,88 @@ public sealed class VerticalAlignBuilder : ICssBuilder
     public VerticalAlignBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
     public VerticalAlignBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private VerticalAlignBuilder Chain(string value)
     {
-        var list = new List<VerticalAlignRule>(_rules) { new VerticalAlignRule(value, null) };
-        return new VerticalAlignBuilder(list);
+        _rules.Add(new VerticalAlignRule(value, null));
+        return this;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private VerticalAlignBuilder ChainBp(Breakpoint bp)
     {
-        VerticalAlignRule last = _rules.LastOrDefault();
-        if (last.Value == null)
-            return new VerticalAlignBuilder("baseline", bp);
+        if (_rules.Count == 0)
+        {
+            _rules.Add(new VerticalAlignRule(Enums.VerticalAligns.VerticalAlign.BaselineValue, bp));
+            return this;
+        }
 
-        var list = new List<VerticalAlignRule>(_rules);
-        list[list.Count - 1] = new VerticalAlignRule(last.Value, bp);
-        return new VerticalAlignBuilder(list);
+        int lastIdx = _rules.Count - 1;
+        VerticalAlignRule last = _rules[lastIdx];
+        _rules[lastIdx] = new VerticalAlignRule(last.Value, bp);
+        return this;
     }
 
     public string ToClass()
     {
         if (_rules.Count == 0) return string.Empty;
-        var classes = new List<string>(_rules.Count);
-        foreach (VerticalAlignRule rule in _rules)
+
+        using var sb = new PooledStringBuilder();
+        var first = true;
+        for (var i = 0; i < _rules.Count; i++)
         {
+            VerticalAlignRule rule = _rules[i];
             string cls = rule.Value switch
             {
-                "baseline" => "align-baseline",
-                "top" => "align-top",
-                "middle" => "align-middle",
-                "bottom" => "align-bottom",
-                "text-top" => "align-text-top",
-                "text-bottom" => "align-text-bottom",
+                Enums.VerticalAligns.VerticalAlign.BaselineValue => "align-baseline",
+                Enums.VerticalAligns.VerticalAlign.TopValue => "align-top",
+                Enums.VerticalAligns.VerticalAlign.MiddleValue => "align-middle",
+                Enums.VerticalAligns.VerticalAlign.BottomValue => "align-bottom",
+                Enums.VerticalAligns.VerticalAlign.TextTopValue => "align-text-top",
+                Enums.VerticalAligns.VerticalAlign.TextBottomValue => "align-text-bottom",
                 _ => string.Empty
             };
-            if (cls.HasContent())
-            {
-                string bp = GetBp(rule.Breakpoint);
-                string className = cls;
-                if (bp.HasContent())
-                {
-                    int dashIndex = className.IndexOf('-');
-                    if (dashIndex > 0)
-                        className = $"{className.Substring(0, dashIndex)}-{bp}{className.Substring(dashIndex)}";
-                    else
-                        className = $"{bp}-{className}";
-                }
-                classes.Add(className);
-            }
+            if (cls.Length == 0)
+                continue;
+
+            string bp = GetBp(rule.Breakpoint);
+            if (bp.Length != 0)
+                cls = InsertBreakpoint(cls, bp);
+
+            if (!first) sb.Append(' ');
+            else first = false;
+
+            sb.Append(cls);
         }
-        return string.Join(" ", classes);
+        return sb.ToString();
     }
 
     public string ToStyle()
     {
         if (_rules.Count == 0) return string.Empty;
-        var styles = new List<string>(_rules.Count);
-        foreach (VerticalAlignRule rule in _rules)
+
+        using var sb = new PooledStringBuilder();
+        var first = true;
+        for (var i = 0; i < _rules.Count; i++)
         {
-            string? css = $"vertical-align: {rule.Value}";
-            if (css.HasContent()) styles.Add(css);
+            VerticalAlignRule rule = _rules[i];
+            string val = rule.Value;
+            if (string.IsNullOrEmpty(val))
+                continue;
+
+            if (!first) sb.Append("; ");
+            else first = false;
+
+            sb.Append("vertical-align: ");
+            sb.Append(val);
         }
-        return string.Join("; ", styles);
+        return sb.ToString();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetBp(Breakpoint? breakpoint)
     {
-        if (breakpoint == null) return string.Empty;
+        if (breakpoint is null) return string.Empty;
         switch (breakpoint)
         {
             case Breakpoint.PhoneValue:
@@ -122,6 +145,33 @@ public sealed class VerticalAlignBuilder : ICssBuilder
             default:
                 return string.Empty;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string InsertBreakpoint(string className, string bp)
+    {
+        int dashIndex = className.IndexOf('-');
+        if (dashIndex > 0)
+        {
+            int len = dashIndex + 1 + bp.Length + (className.Length - dashIndex);
+            return string.Create(len, (className, dashIndex, bp), static (dst, s) =>
+            {
+                s.className.AsSpan(0, s.dashIndex).CopyTo(dst);
+                int idx = s.dashIndex;
+                dst[idx++] = '-';
+                s.bp.AsSpan().CopyTo(dst[idx..]);
+                idx += s.bp.Length;
+                s.className.AsSpan(s.dashIndex).CopyTo(dst[idx..]);
+            });
+        }
+
+        return string.Create(bp.Length + 1 + className.Length, (className, bp), static (dst, s) =>
+        {
+            s.bp.AsSpan().CopyTo(dst);
+            int idx = s.bp.Length;
+            dst[idx++] = '-';
+            s.className.AsSpan().CopyTo(dst[idx..]);
+        });
     }
 }
 

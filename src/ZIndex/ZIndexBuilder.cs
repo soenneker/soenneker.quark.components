@@ -1,6 +1,7 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using Soenneker.Extensions.String;
+using System.Runtime.CompilerServices;
+using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 
@@ -8,7 +9,13 @@ namespace Soenneker.Quark.Components.ZIndex;
 
 public sealed class ZIndexBuilder : ICssBuilder
 {
-    private readonly List<ZIndexRule> _rules = [];
+    private readonly List<ZIndexRule> _rules = new(4);
+
+    private const string _classNeg1 = "z-n1";
+    private const string _class0 = "z-0";
+    private const string _class1 = "z-1";
+    private const string _class2 = "z-2";
+    private const string _class3 = "z-3";
 
     internal ZIndexBuilder(int value, Breakpoint? breakpoint = null)
     {
@@ -17,7 +24,8 @@ public sealed class ZIndexBuilder : ICssBuilder
 
     internal ZIndexBuilder(List<ZIndexRule> rules)
     {
-        _rules.AddRange(rules);
+        if (rules is { Count: > 0 })
+            _rules.AddRange(rules);
     }
 
     public ZIndexBuilder N1 => Chain(-1);
@@ -33,70 +41,82 @@ public sealed class ZIndexBuilder : ICssBuilder
     public ZIndexBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
     public ZIndexBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ZIndexBuilder Chain(int value)
     {
-        var list = new List<ZIndexRule>(_rules) { new ZIndexRule(value, null) };
-        return new ZIndexBuilder(list);
+        _rules.Add(new ZIndexRule(value, null));
+        return this;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ZIndexBuilder ChainBp(Breakpoint bp)
     {
-        ZIndexRule last = _rules.LastOrDefault();
-        if (last.Value == 0)
-            return new ZIndexBuilder(0, bp);
+        if (_rules.Count == 0)
+        {
+            _rules.Add(new ZIndexRule(0, bp));
+            return this;
+        }
 
-        var list = new List<ZIndexRule>(_rules);
-        list[list.Count - 1] = new ZIndexRule(last.Value, bp);
-        return new ZIndexBuilder(list);
+        int lastIdx = _rules.Count - 1;
+        ZIndexRule last = _rules[lastIdx];
+        _rules[lastIdx] = new ZIndexRule(last.Value, bp);
+        return this;
     }
 
     public string ToClass()
     {
         if (_rules.Count == 0) return string.Empty;
-        var classes = new List<string>(_rules.Count);
-        foreach (ZIndexRule rule in _rules)
+
+        using var sb = new PooledStringBuilder();
+        var first = true;
+        for (var i = 0; i < _rules.Count; i++)
         {
+            ZIndexRule rule = _rules[i];
             string cls = rule.Value switch
             {
-                -1 => "z-n1",
-                0 => "z-0",
-                1 => "z-1",
-                2 => "z-2",
-                3 => "z-3",
+                -1 => _classNeg1,
+                0 => _class0,
+                1 => _class1,
+                2 => _class2,
+                3 => _class3,
                 _ => string.Empty
             };
-            if (cls.HasContent())
-            {
-                string bp = GetBp(rule.Breakpoint);
-                string className = cls;
-                if (bp.HasContent())
-                {
-                    int dashIndex = className.IndexOf('-');
-                    if (dashIndex > 0)
-                        className = $"{className.Substring(0, dashIndex)}-{bp}{className.Substring(dashIndex)}";
-                    else
-                        className = $"{bp}-{className}";
-                }
-                classes.Add(className);
-            }
+            if (cls.Length == 0)
+                continue;
+
+            string bp = GetBp(rule.Breakpoint);
+            if (bp.Length != 0)
+                cls = InsertBreakpoint(cls, bp);
+
+            if (!first) sb.Append(' ');
+            else first = false;
+
+            sb.Append(cls);
         }
-        return string.Join(" ", classes);
+        return sb.ToString();
     }
 
     public string ToStyle()
     {
         if (_rules.Count == 0) return string.Empty;
-        var styles = new List<string>(_rules.Count);
-        foreach (ZIndexRule rule in _rules)
+
+        using var sb = new PooledStringBuilder();
+        var first = true;
+        for (var i = 0; i < _rules.Count; i++)
         {
-            styles.Add($"z-index: {rule.Value}");
+            ZIndexRule rule = _rules[i];
+            if (!first) sb.Append("; ");
+            else first = false;
+            sb.Append("z-index: ");
+            sb.Append(rule.Value.ToString());
         }
-        return string.Join("; ", styles);
+        return sb.ToString();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetBp(Breakpoint? breakpoint)
     {
-        if (breakpoint == null) return string.Empty;
+        if (breakpoint is null) return string.Empty;
         switch (breakpoint)
         {
             case Breakpoint.PhoneValue:
@@ -119,6 +139,33 @@ public sealed class ZIndexBuilder : ICssBuilder
             default:
                 return string.Empty;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string InsertBreakpoint(string className, string bp)
+    {
+        int dashIndex = className.IndexOf('-');
+        if (dashIndex > 0)
+        {
+            int len = dashIndex + 1 + bp.Length + (className.Length - dashIndex);
+            return string.Create(len, (className, dashIndex, bp), static (dst, s) =>
+            {
+                s.className.AsSpan(0, s.dashIndex).CopyTo(dst);
+                int idx = s.dashIndex;
+                dst[idx++] = '-';
+                s.bp.AsSpan().CopyTo(dst[idx..]);
+                idx += s.bp.Length;
+                s.className.AsSpan(s.dashIndex).CopyTo(dst[idx..]);
+            });
+        }
+
+        return string.Create(bp.Length + 1 + className.Length, (className, bp), static (dst, s) =>
+        {
+            s.bp.AsSpan().CopyTo(dst);
+            int idx = s.bp.Length;
+            dst[idx++] = '-';
+            s.className.AsSpan().CopyTo(dst[idx..]);
+        });
     }
 }
 

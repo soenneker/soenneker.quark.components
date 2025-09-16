@@ -1,6 +1,7 @@
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using Soenneker.Extensions.String;
+using System.Runtime.CompilerServices;
+using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 using Soenneker.Quark.Enums.GlobalKeywords;
@@ -9,11 +10,17 @@ using TextOverflowEnum = Soenneker.Quark.Enums.TextOverflows.TextOverflow;
 namespace Soenneker.Quark.Components.TextOverflow;
 
 /// <summary>
-/// Simplified text overflow builder with fluent API for chaining text overflow rules.
+/// High-performance text-overflow builder with fluent API for chaining rules.
 /// </summary>
 public sealed class TextOverflowBuilder : ICssBuilder
 {
-    private readonly List<TextOverflowRule> _rules = [];
+    private readonly List<TextOverflowRule> _rules = new(4);
+
+    // ----- Class constants -----
+    private const string _classTruncate = "text-truncate";
+
+    // ----- CSS prefix -----
+    private const string _textOverflowPrefix = "text-overflow: ";
 
     internal TextOverflowBuilder(TextOverflowEnum textOverflow, Breakpoint? breakpoint = null)
     {
@@ -22,163 +29,140 @@ public sealed class TextOverflowBuilder : ICssBuilder
 
     internal TextOverflowBuilder(List<TextOverflowRule> rules)
     {
-        _rules.AddRange(rules);
+        if (rules is { Count: > 0 })
+            _rules.AddRange(rules);
     }
 
-    /// <summary>
-    /// Chain with clip text overflow for the next rule.
-    /// </summary>
-    public TextOverflowBuilder Clip => ChainWithTextOverflow(TextOverflowEnum.Clip);
+    // ----- Fluent chaining (TextOverflow enum) -----
+    public TextOverflowBuilder Clip => Chain(TextOverflowEnum.Clip);
+    public TextOverflowBuilder Ellipsis => Chain(TextOverflowEnum.Ellipsis);
 
-    /// <summary>
-    /// Chain with ellipsis text overflow for the next rule.
-    /// </summary>
-    public TextOverflowBuilder Ellipsis => ChainWithTextOverflow(TextOverflowEnum.Ellipsis);
+    // ----- Fluent chaining (Global keywords) -----
+    public TextOverflowBuilder Inherit => Chain(GlobalKeyword.Inherit);
+    public TextOverflowBuilder Initial => Chain(GlobalKeyword.Initial);
+    public TextOverflowBuilder Revert => Chain(GlobalKeyword.Revert);
+    public TextOverflowBuilder RevertLayer => Chain(GlobalKeyword.RevertLayer);
+    public TextOverflowBuilder Unset => Chain(GlobalKeyword.Unset);
 
-    /// <summary>
-    /// Chain with inherit text overflow for the next rule.
-    /// </summary>
-    public TextOverflowBuilder Inherit => ChainWithTextOverflow(GlobalKeyword.Inherit);
+    // ----- Breakpoint chaining -----
+    public TextOverflowBuilder OnPhone => ChainBp(Breakpoint.Phone);
+    public TextOverflowBuilder OnMobile => ChainBp(Breakpoint.Mobile);
+    public TextOverflowBuilder OnTablet => ChainBp(Breakpoint.Tablet);
+    public TextOverflowBuilder OnLaptop => ChainBp(Breakpoint.Laptop);
+    public TextOverflowBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
+    public TextOverflowBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
 
-    /// <summary>
-    /// Chain with initial text overflow for the next rule.
-    /// </summary>
-    public TextOverflowBuilder Initial => ChainWithTextOverflow(GlobalKeyword.Initial);
-
-    /// <summary>
-    /// Chain with revert text overflow for the next rule.
-    /// </summary>
-    public TextOverflowBuilder Revert => ChainWithTextOverflow(GlobalKeyword.Revert);
-
-    /// <summary>
-    /// Chain with revert-layer text overflow for the next rule.
-    /// </summary>
-    public TextOverflowBuilder RevertLayer => ChainWithTextOverflow(GlobalKeyword.RevertLayer);
-
-    /// <summary>
-    /// Chain with unset text overflow for the next rule.
-    /// </summary>
-    public TextOverflowBuilder Unset => ChainWithTextOverflow(GlobalKeyword.Unset);
-
-    /// <summary>
-    /// Apply on phone devices (portrait phones, less than 576px).
-    /// </summary>
-    public TextOverflowBuilder OnPhone => ChainWithBreakpoint(Breakpoint.Phone);
-
-    /// <summary>
-    /// Apply on mobile devices (landscape phones, 576px and up).
-    /// </summary>
-    public TextOverflowBuilder OnMobile => ChainWithBreakpoint(Breakpoint.Mobile);
-
-    /// <summary>
-    /// Apply on tablet devices (tablets, 768px and up).
-    /// </summary>
-    public TextOverflowBuilder OnTablet => ChainWithBreakpoint(Breakpoint.Tablet);
-
-    /// <summary>
-    /// Apply on laptop devices (laptops, 992px and up).
-    /// </summary>
-    public TextOverflowBuilder OnLaptop => ChainWithBreakpoint(Breakpoint.Laptop);
-
-    /// <summary>
-    /// Apply on desktop devices (desktops, 1200px and up).
-    /// </summary>
-    public TextOverflowBuilder OnDesktop => ChainWithBreakpoint(Breakpoint.Desktop);
-
-    /// <summary>
-    /// Apply on wide screen devices (larger desktops, 1400px and up).
-    /// </summary>
-    public TextOverflowBuilder OnWideScreen => ChainWithBreakpoint(Breakpoint.ExtraExtraLarge);
-
-    private TextOverflowBuilder ChainWithTextOverflow(TextOverflowEnum textOverflow)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private TextOverflowBuilder Chain(TextOverflowEnum value)
     {
-        var newRules = new List<TextOverflowRule>(_rules) { new TextOverflowRule(textOverflow, null) };
-        return new TextOverflowBuilder(newRules);
+        _rules.Add(new TextOverflowRule(value, null));
+        return this;
     }
 
-    private TextOverflowBuilder ChainWithBreakpoint(Breakpoint breakpoint)
+    // Overload for global keywords (assumes a ctor: TextOverflowRule(GlobalKeyword, Breakpoint?))
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private TextOverflowBuilder Chain(GlobalKeyword keyword)
     {
-        TextOverflowRule? lastRule = _rules.LastOrDefault();
-        if (lastRule == null)
-            return new TextOverflowBuilder(TextOverflowEnum.Clip, breakpoint);
-
-        var newRules = new List<TextOverflowRule>(_rules);
-        // Update the last rule with the new breakpoint
-        newRules[newRules.Count - 1] = new TextOverflowRule(lastRule.TextOverflow, breakpoint);
-        return new TextOverflowBuilder(newRules);
+        _rules.Add(new TextOverflowRule(keyword, null));
+        return this;
     }
 
-    /// <summary>
-    /// Gets the CSS class string for the current configuration.
-    /// </summary>
+    /// <summary>Apply a breakpoint to the most recent rule (or bootstrap with Clip if empty).</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private TextOverflowBuilder ChainBp(Breakpoint bp)
+    {
+        if (_rules.Count == 0)
+        {
+            _rules.Add(new TextOverflowRule(TextOverflowEnum.Clip, bp));
+            return this;
+        }
+
+        int lastIdx = _rules.Count - 1;
+        TextOverflowRule last = _rules[lastIdx];
+
+        // Re-create the rule preserving its text-overflow value using the enum-typed property.
+        // (Works for Clip/Ellipsis and for keyword-backed rules if your Intellenum holds keyword values too.)
+        _rules[lastIdx] = new TextOverflowRule(last.TextOverflow, bp);
+        return this;
+    }
+
+    /// <summary>Gets the CSS class string for the current configuration.</summary>
     public string ToClass()
     {
         if (_rules.Count == 0)
             return string.Empty;
 
-        var classes = new List<string>(_rules.Count);
+        using var sb = new PooledStringBuilder();
+        var first = true;
 
-        foreach (TextOverflowRule rule in _rules)
+        for (var i = 0; i < _rules.Count; i++)
         {
-            string textOverflowClass = GetTextOverflowClass(rule.TextOverflow);
-            string breakpointClass = GetBreakpointClass(rule.Breakpoint);
+            TextOverflowRule rule = _rules[i];
 
-            if (textOverflowClass.HasContent())
-            {
-                string className = textOverflowClass;
-                if (breakpointClass.HasContent())
-                {
-                    int dashIndex = className.IndexOf('-');
-                    if (dashIndex > 0)
-                        className = $"{className.Substring(0, dashIndex)}-{breakpointClass}{className.Substring(dashIndex)}";
-                    else
-                        className = $"{breakpointClass}-{className}";
-                }
+            // Only Clip/Ellipsis map to a Bootstrap class; keywords don't.
+            string baseClass = GetTextOverflowClass(rule.TextOverflow);
+            if (baseClass.Length == 0)
+                continue;
 
-                classes.Add(className);
-            }
+            string bp = GetBreakpointClass(rule.Breakpoint);
+            if (bp.Length != 0)
+                baseClass = InsertBreakpoint(baseClass, bp);
+
+            if (!first) sb.Append(' ');
+            else first = false;
+
+            sb.Append(baseClass);
         }
 
-        return string.Join(" ", classes);
+        return sb.ToString();
     }
 
-    /// <summary>
-    /// Gets the CSS style string for the current configuration.
-    /// </summary>
+    /// <summary>Gets the CSS style string for the current configuration.</summary>
     public string ToStyle()
     {
         if (_rules.Count == 0)
             return string.Empty;
 
-        var styles = new List<string>(_rules.Count);
+        using var sb = new PooledStringBuilder();
+        var first = true;
 
-        foreach (TextOverflowRule rule in _rules)
+        for (var i = 0; i < _rules.Count; i++)
         {
-            if (rule.TextOverflow.Value.HasContent())
-            {
-                styles.Add($"text-overflow: {rule.TextOverflow.Value}");
-            }
+            TextOverflowRule rule = _rules[i];
+
+            // Always use the Intellenum string value (covers Clip/Ellipsis and any keyword values)
+            string value = rule.TextOverflow.Value;
+            if (string.IsNullOrEmpty(value))
+                continue;
+
+            if (!first) sb.Append("; ");
+            else first = false;
+
+            sb.Append(_textOverflowPrefix);
+            sb.Append(value);
         }
 
-        return string.Join("; ", styles);
+        return sb.ToString();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetTextOverflowClass(TextOverflowEnum textOverflow)
     {
         switch (textOverflow)
         {
             case TextOverflowEnum.ClipValue:
-                return "text-truncate";
             case TextOverflowEnum.EllipsisValue:
-                return "text-truncate";
+                return _classTruncate;
             default:
                 return string.Empty;
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetBreakpointClass(Breakpoint? breakpoint)
     {
-        if (breakpoint == null) return string.Empty;
+        if (breakpoint is null)
+            return string.Empty;
 
         switch (breakpoint)
         {
@@ -202,5 +186,43 @@ public sealed class TextOverflowBuilder : ICssBuilder
             default:
                 return string.Empty;
         }
+    }
+
+    /// <summary>
+    /// Insert breakpoint token as: "text-truncate" + "md" → "text-md-truncate".
+    /// Falls back to "bp-{class}" if no dash exists.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string InsertBreakpoint(string className, string bp)
+    {
+        int dashIndex = className.IndexOf('-');
+        if (dashIndex > 0)
+        {
+            // length = prefix + "-" + bp + remainder
+            int len = dashIndex + 1 + bp.Length + (className.Length - dashIndex);
+            return string.Create(len, (className, dashIndex, bp), static (dst, s) =>
+            {
+                // prefix
+                s.className.AsSpan(0, s.dashIndex).CopyTo(dst);
+                int idx = s.dashIndex;
+
+                // "-" + bp
+                dst[idx++] = '-';
+                s.bp.AsSpan().CopyTo(dst[idx..]);
+                idx += s.bp.Length;
+
+                // remainder (starts with '-')
+                s.className.AsSpan(s.dashIndex).CopyTo(dst[idx..]);
+            });
+        }
+
+        // Fallback: "bp-{className}"
+        return string.Create(bp.Length + 1 + className.Length, (className, bp), static (dst, s) =>
+        {
+            s.bp.AsSpan().CopyTo(dst);
+            int idx = s.bp.Length;
+            dst[idx++] = '-';
+            s.className.AsSpan().CopyTo(dst[idx..]);
+        });
     }
 }

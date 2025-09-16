@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using Soenneker.Extensions.String;
+using System.Runtime.CompilerServices;
+using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
+using Soenneker.Extensions.String;
 
 namespace Soenneker.Quark.Components.Display;
 
@@ -11,7 +13,7 @@ namespace Soenneker.Quark.Components.Display;
 /// </summary>
 public sealed class DisplayBuilder : ICssBuilder
 {
-    private readonly List<DisplayRule> _rules = [];
+    private readonly List<DisplayRule> _rules = new(4);
 
     internal DisplayBuilder(string display, Breakpoint? breakpoint = null)
     {
@@ -20,191 +22,136 @@ public sealed class DisplayBuilder : ICssBuilder
 
     internal DisplayBuilder(List<DisplayRule> rules)
     {
-        _rules.AddRange(rules);
+        if (rules is { Count: > 0 })
+            _rules.AddRange(rules);
     }
 
-    /// <summary>
-    /// Chain with display none for the next rule.
-    /// </summary>
-    public DisplayBuilder None => ChainWithDisplay("none");
+    public DisplayBuilder None => ChainWithDisplay(Enums.DisplayTypes.DisplayType.NoneValue);
+    public DisplayBuilder Inline => ChainWithDisplay(Enums.DisplayTypes.DisplayType.InlineValue);
+    public DisplayBuilder InlineBlock => ChainWithDisplay(Enums.DisplayTypes.DisplayType.InlineBlockValue);
+    public DisplayBuilder Block => ChainWithDisplay(Enums.DisplayTypes.DisplayType.BlockValue);
+    public DisplayBuilder Flex => ChainWithDisplay(Enums.DisplayTypes.DisplayType.FlexValue);
+    public DisplayBuilder InlineFlex => ChainWithDisplay(Enums.DisplayTypes.DisplayType.InlineFlexValue);
+    public DisplayBuilder Grid => ChainWithDisplay(Enums.DisplayTypes.DisplayType.GridValue);
+    public DisplayBuilder InlineGrid => ChainWithDisplay(Enums.DisplayTypes.DisplayType.InlineGridValue);
+    public DisplayBuilder Table => ChainWithDisplay(Enums.DisplayTypes.DisplayType.TableValue);
+    public DisplayBuilder TableCell => ChainWithDisplay(Enums.DisplayTypes.DisplayType.TableCellValue);
+    public DisplayBuilder TableRow => ChainWithDisplay(Enums.DisplayTypes.DisplayType.TableRowValue);
+    public DisplayBuilder Inherit => ChainWithDisplay(Enums.GlobalKeywords.GlobalKeyword.InheritValue);
+    public DisplayBuilder Initial => ChainWithDisplay(Enums.GlobalKeywords.GlobalKeyword.InitialValue);
+    public DisplayBuilder Revert => ChainWithDisplay(Enums.GlobalKeywords.GlobalKeyword.RevertValue);
+    public DisplayBuilder RevertLayer => ChainWithDisplay(Enums.GlobalKeywords.GlobalKeyword.RevertLayerValue);
+    public DisplayBuilder Unset => ChainWithDisplay(Enums.GlobalKeywords.GlobalKeyword.UnsetValue);
 
-    /// <summary>
-    /// Chain with display inline for the next rule.
-    /// </summary>
-    public DisplayBuilder Inline => ChainWithDisplay("inline");
-
-    /// <summary>
-    /// Chain with display inline-block for the next rule.
-    /// </summary>
-    public DisplayBuilder InlineBlock => ChainWithDisplay("inline-block");
-
-    /// <summary>
-    /// Chain with display block for the next rule.
-    /// </summary>
-    public DisplayBuilder Block => ChainWithDisplay("block");
-
-    /// <summary>
-    /// Chain with display flex for the next rule.
-    /// </summary>
-    public DisplayBuilder Flex => ChainWithDisplay("flex");
-
-    /// <summary>
-    /// Chain with display inline-flex for the next rule.
-    /// </summary>
-    public DisplayBuilder InlineFlex => ChainWithDisplay("inline-flex");
-
-    /// <summary>
-    /// Chain with display grid for the next rule.
-    /// </summary>
-    public DisplayBuilder Grid => ChainWithDisplay("grid");
-
-    /// <summary>
-    /// Chain with display inline-grid for the next rule.
-    /// </summary>
-    public DisplayBuilder InlineGrid => ChainWithDisplay("inline-grid");
-
-    /// <summary>
-    /// Chain with display table for the next rule.
-    /// </summary>
-    public DisplayBuilder Table => ChainWithDisplay("table");
-
-    /// <summary>
-    /// Chain with display table-cell for the next rule.
-    /// </summary>
-    public DisplayBuilder TableCell => ChainWithDisplay("table-cell");
-
-    /// <summary>
-    /// Chain with display table-row for the next rule.
-    /// </summary>
-    public DisplayBuilder TableRow => ChainWithDisplay("table-row");
-
-    /// <summary>
-    /// Apply on phone devices (portrait phones, less than 576px).
-    /// </summary>
     public DisplayBuilder OnPhone => ChainWithBreakpoint(Breakpoint.Phone);
-
-    /// <summary>
-    /// Apply on mobile devices (landscape phones, 576px and up).
-    /// </summary>
     public DisplayBuilder OnMobile => ChainWithBreakpoint(Breakpoint.Mobile);
-
-    /// <summary>
-    /// Apply on tablet devices (tablets, 768px and up).
-    /// </summary>
     public DisplayBuilder OnTablet => ChainWithBreakpoint(Breakpoint.Tablet);
-
-    /// <summary>
-    /// Apply on laptop devices (laptops, 992px and up).
-    /// </summary>
     public DisplayBuilder OnLaptop => ChainWithBreakpoint(Breakpoint.Laptop);
-
-    /// <summary>
-    /// Apply on desktop devices (desktops, 1200px and up).
-    /// </summary>
     public DisplayBuilder OnDesktop => ChainWithBreakpoint(Breakpoint.Desktop);
-
-    /// <summary>
-    /// Apply on wide screen devices (larger desktops, 1400px and up).
-    /// </summary>
     public DisplayBuilder OnWideScreen => ChainWithBreakpoint(Breakpoint.ExtraExtraLarge);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private DisplayBuilder ChainWithDisplay(string display)
     {
-        var newRules = new List<DisplayRule>(_rules) { new DisplayRule(display, null) };
-        return new DisplayBuilder(newRules);
+        _rules.Add(new DisplayRule(display, null));
+        return this;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private DisplayBuilder ChainWithBreakpoint(Breakpoint breakpoint)
     {
-        DisplayRule? lastRule = _rules.LastOrDefault();
-        if (lastRule == null)
-            return new DisplayBuilder("block", breakpoint);
+        if (_rules.Count == 0)
+        {
+            _rules.Add(new DisplayRule(Enums.DisplayTypes.DisplayType.BlockValue, breakpoint));
+            return this;
+        }
 
-        var newRules = new List<DisplayRule>(_rules);
-        // Update the last rule with the new breakpoint
-        newRules[newRules.Count - 1] = new DisplayRule(lastRule.Display, breakpoint);
-        return new DisplayBuilder(newRules);
+        int lastIdx = _rules.Count - 1;
+        DisplayRule last = _rules[lastIdx];
+        _rules[lastIdx] = new DisplayRule(last.Display, breakpoint);
+        return this;
     }
 
-    /// <summary>
-    /// Gets the CSS class string for the current configuration.
-    /// </summary>
     public string ToClass()
     {
         if (_rules.Count == 0)
             return string.Empty;
 
-        var classes = new List<string>(_rules.Count);
+        using var sb = new PooledStringBuilder();
+        var first = true;
 
-        foreach (DisplayRule rule in _rules)
+        for (var i = 0; i < _rules.Count; i++)
         {
-            string displayClass = GetDisplayClass(rule.Display);
-            string breakpointClass = GetBreakpointClass(rule.Breakpoint);
+            DisplayRule rule = _rules[i];
+            string cls = GetDisplayClass(rule.Display);
+            if (cls.Length == 0)
+                continue;
 
-            if (displayClass.HasContent())
-            {
-                // Bootstrap order: d-{bp?}-{value}
-                string className = displayClass;
-                if (breakpointClass.HasContent())
-                {
-                    // displayClass is like "d-flex"; insert the breakpoint after the prefix
-                    int dashIndex = className.IndexOf('-');
-                    if (dashIndex > 0)
-                        className = $"{className.Substring(0, dashIndex)}-{breakpointClass}{className.Substring(dashIndex)}";
-                    else
-                        className = $"{breakpointClass}-{className}";
-                }
+            string bp = GetBreakpointClass(rule.Breakpoint);
+            if (bp.Length != 0)
+                cls = InsertBreakpoint(cls, bp);
 
-                classes.Add(className);
-            }
+            if (!first) sb.Append(' ');
+            else first = false;
+
+            sb.Append(cls);
         }
 
-        return string.Join(" ", classes);
+        return sb.ToString();
     }
 
-    /// <summary>
-    /// Gets the CSS style string for the current configuration.
-    /// </summary>
     public string ToStyle()
     {
         if (_rules.Count == 0)
             return string.Empty;
 
-        var styles = new List<string>(_rules.Count);
+        using var sb = new PooledStringBuilder();
+        var first = true;
 
-        foreach (DisplayRule rule in _rules)
+        for (var i = 0; i < _rules.Count; i++)
         {
-            if (rule.Display.HasContent())
-            {
-                styles.Add($"display: {rule.Display}");
-            }
+            DisplayRule rule = _rules[i];
+            string val = rule.Display;
+            if (val.IsNullOrEmpty())
+                continue;
+
+            if (!first)
+                sb.Append("; ");
+            else
+                first = false;
+
+            sb.Append("display: ");
+            sb.Append(val);
         }
 
-        return string.Join("; ", styles);
+        return sb.ToString();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetDisplayClass(string display)
     {
         return display switch
         {
-            "none" => "d-none",
-            "inline" => "d-inline",
-            "inline-block" => "d-inline-block",
-            "block" => "d-block",
-            "flex" => "d-flex",
-            "inline-flex" => "d-inline-flex",
-            "grid" => "d-grid",
-            "inline-grid" => "d-inline-grid",
-            "table" => "d-table",
-            "table-cell" => "d-table-cell",
-            "table-row" => "d-table-row",
+            Enums.DisplayTypes.DisplayType.NoneValue => "d-none",
+            Enums.DisplayTypes.DisplayType.InlineValue => "d-inline",
+            Enums.DisplayTypes.DisplayType.InlineBlockValue => "d-inline-block",
+            Enums.DisplayTypes.DisplayType.BlockValue => "d-block",
+            Enums.DisplayTypes.DisplayType.FlexValue => "d-flex",
+            Enums.DisplayTypes.DisplayType.InlineFlexValue => "d-inline-flex",
+            Enums.DisplayTypes.DisplayType.GridValue => "d-grid",
+            Enums.DisplayTypes.DisplayType.InlineGridValue => "d-inline-grid",
+            Enums.DisplayTypes.DisplayType.TableValue => "d-table",
+            Enums.DisplayTypes.DisplayType.TableCellValue => "d-table-cell",
+            Enums.DisplayTypes.DisplayType.TableRowValue => "d-table-row",
             _ => string.Empty
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetBreakpointClass(Breakpoint? breakpoint)
     {
-        if (breakpoint == null) return string.Empty;
+        if (breakpoint is null)
+            return string.Empty;
 
         switch (breakpoint)
         {
@@ -228,5 +175,37 @@ public sealed class DisplayBuilder : ICssBuilder
             default:
                 return string.Empty;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string InsertBreakpoint(string className, string bp)
+    {
+        int dashIndex = className.IndexOf('-');
+        if (dashIndex > 0)
+        {
+            int len = dashIndex + 1 + bp.Length + (className.Length - dashIndex);
+            return string.Create(len, (className, dashIndex, bp), static (dst, s) =>
+            {
+                s.className.AsSpan(0, s.dashIndex)
+                    .CopyTo(dst);
+                int idx = s.dashIndex;
+                dst[idx++] = '-';
+                s.bp.AsSpan()
+                    .CopyTo(dst[idx..]);
+                idx += s.bp.Length;
+                s.className.AsSpan(s.dashIndex)
+                    .CopyTo(dst[idx..]);
+            });
+        }
+
+        return string.Create(bp.Length + 1 + className.Length, (className, bp), static (dst, s) =>
+        {
+            s.bp.AsSpan()
+                .CopyTo(dst);
+            int idx = s.bp.Length;
+            dst[idx++] = '-';
+            s.className.AsSpan()
+                .CopyTo(dst[idx..]);
+        });
     }
 }

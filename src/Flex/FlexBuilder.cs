@@ -1,6 +1,7 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using Soenneker.Extensions.String;
+using System.Runtime.CompilerServices;
+using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 
@@ -11,7 +12,7 @@ namespace Soenneker.Quark.Components.Flex;
 /// </summary>
 public sealed class FlexBuilder : ICssBuilder
 {
-    private readonly List<FlexRule> _rules = [];
+    private readonly List<FlexRule> _rules = new(8);
 
     internal FlexBuilder(string property, string? value = null, Breakpoint? breakpoint = null)
     {
@@ -20,7 +21,8 @@ public sealed class FlexBuilder : ICssBuilder
 
     internal FlexBuilder(List<FlexRule> rules)
     {
-        _rules.AddRange(rules);
+        if (rules is { Count: > 0 })
+            _rules.AddRange(rules);
     }
 
     // Display properties
@@ -138,22 +140,26 @@ public sealed class FlexBuilder : ICssBuilder
     /// </summary>
     public FlexBuilder OnWideScreen => ChainWithBreakpoint(Breakpoint.ExtraExtraLarge);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private FlexBuilder ChainWithRule(string property, string value)
     {
-        var newRules = new List<FlexRule>(_rules) { new FlexRule(property, value, null) };
-        return new FlexBuilder(newRules);
+        _rules.Add(new FlexRule(property, value, null));
+        return this;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private FlexBuilder ChainWithBreakpoint(Breakpoint breakpoint)
     {
-        FlexRule? lastRule = _rules.LastOrDefault();
-        if (lastRule == null)
-            return new FlexBuilder("display", string.Empty, breakpoint);
+        if (_rules.Count == 0)
+        {
+            _rules.Add(new FlexRule("display", string.Empty, breakpoint));
+            return this;
+        }
 
-        var newRules = new List<FlexRule>(_rules);
-        // Update the last rule with the new breakpoint
-        newRules[newRules.Count - 1] = new FlexRule(lastRule.Property, lastRule.Value, breakpoint);
-        return new FlexBuilder(newRules);
+        int lastIdx = _rules.Count - 1;
+        FlexRule last = _rules[lastIdx];
+        _rules[lastIdx] = new FlexRule(last.Property, last.Value, breakpoint);
+        return this;
     }
 
     /// <summary>
@@ -164,30 +170,27 @@ public sealed class FlexBuilder : ICssBuilder
         if (_rules.Count == 0)
             return string.Empty;
 
-        var classes = new List<string>(_rules.Count);
+        using var sb = new PooledStringBuilder();
+        var first = true;
 
-        foreach (FlexRule rule in _rules)
+        for (var i = 0; i < _rules.Count; i++)
         {
-            string flexClass = GetFlexClass(rule.Property, rule.Value);
-            string breakpointClass = GetBreakpointClass(rule.Breakpoint);
+            FlexRule rule = _rules[i];
+            string cls = GetFlexClass(rule.Property, rule.Value);
+            if (cls.Length == 0)
+                continue;
 
-            if (flexClass.HasContent())
-            {
-                string className = flexClass;
-                if (breakpointClass.HasContent())
-                {
-                    int dashIndex = className.IndexOf('-');
-                    if (dashIndex > 0)
-                        className = $"{className.Substring(0, dashIndex)}-{breakpointClass}{className.Substring(dashIndex)}";
-                    else
-                        className = $"{breakpointClass}-{className}";
-                }
+            string bp = GetBreakpointClass(rule.Breakpoint);
+            if (bp.Length != 0)
+                cls = InsertBreakpoint(cls, bp);
 
-                classes.Add(className);
-            }
+            if (!first) sb.Append(' ');
+            else first = false;
+
+            sb.Append(cls);
         }
 
-        return string.Join(" ", classes);
+        return sb.ToString();
     }
 
     /// <summary>
@@ -198,18 +201,23 @@ public sealed class FlexBuilder : ICssBuilder
         if (_rules.Count == 0)
             return string.Empty;
 
-        var styles = new List<string>(_rules.Count);
+        using var sb = new PooledStringBuilder();
+        var first = true;
 
-        foreach (FlexRule rule in _rules)
+        for (var i = 0; i < _rules.Count; i++)
         {
-            string? cssProperty = GetCssProperty(rule.Property, rule.Value);
-            if (cssProperty.HasContent())
-            {
-                styles.Add(cssProperty);
-            }
+            FlexRule rule = _rules[i];
+            string? css = GetCssProperty(rule.Property, rule.Value);
+            if (css is null)
+                continue;
+
+            if (!first) sb.Append("; ");
+            else first = false;
+
+            sb.Append(css);
         }
 
-        return string.Join("; ", styles);
+        return sb.ToString();
     }
 
     private static string GetFlexClass(string property, string value)
@@ -292,10 +300,10 @@ public sealed class FlexBuilder : ICssBuilder
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetBreakpointClass(Breakpoint? breakpoint)
     {
-        if (breakpoint == null) return string.Empty;
-
+        if (breakpoint is null) return string.Empty;
         switch (breakpoint)
         {
             case Breakpoint.PhoneValue:
@@ -318,5 +326,32 @@ public sealed class FlexBuilder : ICssBuilder
             default:
                 return string.Empty;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string InsertBreakpoint(string className, string bp)
+    {
+        int dashIndex = className.IndexOf('-');
+        if (dashIndex > 0)
+        {
+            int len = dashIndex + 1 + bp.Length + (className.Length - dashIndex);
+            return string.Create(len, (className, dashIndex, bp), static (dst, s) =>
+            {
+                s.className.AsSpan(0, s.dashIndex).CopyTo(dst);
+                int idx = s.dashIndex;
+                dst[idx++] = '-';
+                s.bp.AsSpan().CopyTo(dst[idx..]);
+                idx += s.bp.Length;
+                s.className.AsSpan(s.dashIndex).CopyTo(dst[idx..]);
+            });
+        }
+
+        return string.Create(bp.Length + 1 + className.Length, (className, bp), static (dst, s) =>
+        {
+            s.bp.AsSpan().CopyTo(dst);
+            int idx = s.bp.Length;
+            dst[idx++] = '-';
+            s.className.AsSpan().CopyTo(dst[idx..]);
+        });
     }
 }

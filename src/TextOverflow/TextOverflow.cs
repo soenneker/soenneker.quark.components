@@ -1,5 +1,4 @@
 using Soenneker.Quark.Enums.GlobalKeywords;
-using TextOverflowEnum = Soenneker.Quark.Enums.TextOverflows.TextOverflow;
 
 namespace Soenneker.Quark.Components.TextOverflow;
 
@@ -11,12 +10,12 @@ public static class TextOverflowUtility
     /// <summary>
     /// Clips the overflowing text at the content area boundary.
     /// </summary>
-    public static TextOverflowBuilder Clip => new(TextOverflowEnum.Clip);
+    public static TextOverflowBuilder Clip => new(Enums.TextOverflows.TextOverflow.Clip);
 
     /// <summary>
     /// Displays an ellipsis ('…') to represent clipped text.
     /// </summary>
-    public static TextOverflowBuilder Ellipsis => new(TextOverflowEnum.Ellipsis);
+    public static TextOverflowBuilder Ellipsis => new(Enums.TextOverflows.TextOverflow.Ellipsis);
 
     /// <summary>
     /// The element inherits the text-overflow value from its parent element.
