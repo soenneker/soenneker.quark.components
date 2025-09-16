@@ -497,6 +497,112 @@ public abstract class Component : ComponentBase, Abstract.IComponent
     protected virtual Task HandleFocus(FocusEventArgs e) => OnFocus.InvokeIfHasDelegate(e);
     protected virtual Task HandleBlur(FocusEventArgs e) => OnBlur.InvokeIfHasDelegate(e);
 
+
+    // === Attribute helpers ===
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected static string EnsureClass(string? existing, string? toAdd)
+    {
+        if (toAdd.IsNullOrEmpty())
+            return existing ?? string.Empty;
+
+        if (existing.IsNullOrEmpty())
+            return toAdd!;
+
+        // Cheap dup guard, ordinal match (class tokens are ASCII-ish)
+        return existing.Contains(toAdd!, StringComparison.Ordinal) ? existing : $"{existing} {toAdd}";
+    }
+
+    /// <summary>
+    /// Append a class token without duplicate checks (use when you know it's unique).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected static string AppendToClass(string? existing, string toAdd)
+    {
+        if (toAdd.IsNullOrEmpty())
+            return existing ?? string.Empty;
+
+        if (existing.IsNullOrEmpty())
+            return toAdd;
+
+        return $"{existing} {toAdd}";
+    }
+
+    /// <summary>
+    /// Ensure a class token exists in the attributes["class"] value exactly once.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected static void EnsureClassAttr(IDictionary<string, object> attrs, string token)
+    {
+        attrs.TryGetValue("class", out object? clsObj);
+        string cls = EnsureClass(clsObj?.ToString(), token);
+
+        if (cls.Length > 0)
+            attrs["class"] = cls;
+    }
+
+    /// <summary>
+    /// Append a class token to attributes["class"] (no dup check).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected static void AppendToClassAttr(IDictionary<string, object> attrs, string token)
+    {
+        attrs.TryGetValue("class", out object? clsObj);
+        string cls = AppendToClass(clsObj?.ToString(), token);
+
+        if (cls.Length > 0)
+            attrs["class"] = cls;
+    }
+
+    /// <summary>
+    /// Set an attribute if it's not already present.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected static void EnsureAttr<T>(IDictionary<string, object> attrs, string name, T value)
+    {
+        if (!attrs.ContainsKey(name))
+            attrs[name] = value!;
+    }
+
+    /// <summary>
+    /// Set attribute to a value when condition is true; otherwise remove it.
+    /// Useful for aria flags, boolean attrs, etc.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected static void SetOrRemove(IDictionary<string, object> attrs, string name, bool condition, object trueValue)
+    {
+        if (condition)
+            attrs[name] = trueValue;
+        else
+            attrs.Remove(name);
+    }
+
+    /// <summary>
+    /// Append a style declaration (e.g., "color: red") onto attributes["style"] with proper "; " separation.
+    /// No duplicate guarding—use higher-level logic if you need that.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected static void AppendStyleDeclAttr(IDictionary<string, object> attrs, string fullDecl)
+    {
+        if (string.IsNullOrWhiteSpace(fullDecl))
+            return;
+
+        attrs.TryGetValue("style", out object? styleObj);
+        var existing = styleObj?.ToString();
+
+        if (string.IsNullOrEmpty(existing))
+        {
+            attrs["style"] = fullDecl;
+            return;
+        }
+
+        // ensure delimiter
+        if (existing!.EndsWith(';'))
+            attrs["style"] = $"{existing} {fullDecl}";
+        else
+            attrs["style"] = $"{existing}; {fullDecl}";
+    }
+
+
     public virtual void Dispose()
     {
         // Run sync cleanup once
