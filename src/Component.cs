@@ -248,16 +248,16 @@ public abstract class Component : ComponentBase, Abstract.IComponent
 
         try
         {
-            if (!Class.IsNullOrEmpty()) cls.Append(Class!);
-            if (!Style.IsNullOrEmpty()) sty.Append(Style!);
+            if (Class.HasContent()) cls.Append(Class!);
+            if (Style.HasContent()) sty.Append(Style!);
 
-            if (!Id.IsNullOrEmpty()) attrs["id"] = Id!;
-            if (!Title.IsNullOrEmpty()) attrs["title"] = Title!;
+            if (Id.HasContent()) attrs["id"] = Id!;
+            if (Title.HasContent()) attrs["title"] = Title!;
             if (TabIndex.HasValue) attrs["tabindex"] = TabIndex.Value;
             if (Hidden) attrs["hidden"] = true;
-            if (!Role.IsNullOrEmpty()) attrs["role"] = Role!;
-            if (!AriaLabel.IsNullOrEmpty()) attrs["aria-label"] = AriaLabel!;
-            if (!AriaDescribedBy.IsNullOrEmpty()) attrs["aria-describedby"] = AriaDescribedBy!;
+            if (Role.HasContent()) attrs["role"] = Role!;
+            if (AriaLabel.HasContent()) attrs["aria-label"] = AriaLabel!;
+            if (AriaDescribedBy.HasContent()) attrs["aria-describedby"] = AriaDescribedBy!;
 
             {
                 string? textColorClass = TextColor.BuildClass("text");
@@ -266,7 +266,8 @@ public abstract class Component : ComponentBase, Abstract.IComponent
                 else
                 {
                     string? css = TextColor.CssValueOrNull();
-                    if (!css.IsNullOrEmpty())
+
+                    if (css.HasContent())
                         AppendStyleDecl(ref sty, "color: ", css!);
                 }
             }
@@ -278,7 +279,8 @@ public abstract class Component : ComponentBase, Abstract.IComponent
                 else
                 {
                     string? css = BackgroundColor.CssValueOrNull();
-                    if (!css.IsNullOrEmpty())
+
+                    if (css.HasContent())
                         AppendStyleDecl(ref sty, "background-color: ", css!);
                 }
             }
