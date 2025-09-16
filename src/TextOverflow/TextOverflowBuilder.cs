@@ -5,7 +5,6 @@ using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 using Soenneker.Quark.Enums.GlobalKeywords;
-using Soenneker.Quark.Enums.Size;
 using Soenneker.Quark.Components.Utilities;
 using TextOverflowEnum = Soenneker.Quark.Enums.TextOverflows.TextOverflow;
 

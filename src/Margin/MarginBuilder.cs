@@ -1,11 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
 using Soenneker.Quark.Enums.ElementSides;
-using Soenneker.Quark.Enums.Size;
 using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.Margin;
