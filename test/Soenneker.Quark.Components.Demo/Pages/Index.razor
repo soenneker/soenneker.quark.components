@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using Soenneker.Quark.Components.Demo.Components
-@using Soenneker.Quark.Components.Margin
+@using Soenneker.Quark.Components.Margins
+@using Soenneker.Quark.Components.Heights
 
 <PageTitle>Quark Components Demo</PageTitle>
 
@@ -29,7 +30,34 @@
     <p>Focus count: @_focusCount</p>
 </DemoDiv>
 
-<DemoDiv Margin="Margin.S0.OnDesktop.S5.OnTablet.S5.OnPhone">Margin</DemoDiv>
+<DemoDiv Margin="Margin.S1">Margin</DemoDiv>
+
+<h2>Height and Width Examples</h2>
+
+<DemoDiv Height="200" Style="background-color: #fff3e0; padding: 10px; border: 2px solid #ff9800;">
+    <strong>Height with integer (200px)</strong>
+    <p>This div has Height=200 (converts to 200px)</p>
+</DemoDiv>
+
+<DemoDiv Width="300" Style="background-color: #f3e5f5; padding: 10px; border: 2px solid #9c27b0;">
+    <strong>Width with integer (300px)</strong>
+    <p>This div has Width=300 (converts to 300px)</p>
+</DemoDiv>
+
+<DemoDiv Height="150" Width="400" Style="background-color: #e8f5e8; padding: 10px; border: 2px solid #4caf50;">
+    <strong>Both Height and Width with integers</strong>
+    <p>Height=150 (150px), Width=400 (400px)</p>
+</DemoDiv>
+
+<DemoDiv Height="@("250")" Style="background-color: #fce4ec; padding: 10px; border: 2px solid #e91e63;">
+    <strong>Height with string</strong>
+    <p>This div has Height="@("250")" (still works)</p>
+</DemoDiv>
+
+<DemoDiv Height="Height.P50" Style="background-color: #e0f2f1; padding: 10px; border: 2px solid #009688;">
+    <strong>Height with builder (50%)</strong>
+    <p>This div has Height="Height.P50" (50% height)</p>
+</DemoDiv>
 
 @code {
     private int _clickCount = 0;

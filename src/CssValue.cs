@@ -1,6 +1,8 @@
-using System;
 using Soenneker.Extensions.String;
 using Soenneker.Quark.Components.Abstract;
+using System;
+using Soenneker.Quark.Components.Heights;
+using Soenneker.Quark.Components.Widths;
 
 namespace Soenneker.Quark.Components;
 
@@ -32,6 +34,23 @@ public readonly struct CssValue<TBuilder> : IEquatable<CssValue<TBuilder>> where
     public static implicit operator CssValue<TBuilder>(string value)
     {
         return new CssValue<TBuilder>(value);
+    }
+
+    /// <summary>
+    /// Implicit conversion from int to CssValue.
+    /// For Height and Width builders, converts to proper CSS style.
+    /// </summary>
+    public static implicit operator CssValue<TBuilder>(int value)
+    {
+        // Check if this is a Height or Width builder by checking the type name
+        string typeName = typeof(TBuilder).Name;
+
+        return typeName switch
+        {
+            nameof(HeightBuilder) => new CssValue<TBuilder>($"height: {value}px"),
+            nameof(WidthBuilder) => new CssValue<TBuilder>($"width: {value}px"),
+            _ => new CssValue<TBuilder>(value.ToString())
+        };
     }
 
     /// <summary>
