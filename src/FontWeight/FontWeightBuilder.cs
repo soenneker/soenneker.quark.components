@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
-using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.FontWeight;
 
@@ -44,11 +44,16 @@ public sealed class FontWeightBuilder : ICssBuilder
     public FontWeightBuilder Unset => Chain(Enums.GlobalKeywords.GlobalKeyword.UnsetValue);
 
     public FontWeightBuilder OnPhone => ChainBp(Breakpoint.Phone);
-    public FontWeightBuilder OnMobile => ChainBp(Breakpoint.Mobile);
+
     public FontWeightBuilder OnTablet => ChainBp(Breakpoint.Tablet);
+
     public FontWeightBuilder OnLaptop => ChainBp(Breakpoint.Laptop);
+
     public FontWeightBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
-    public FontWeightBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
+
+    public FontWeightBuilder OnWideScreen => ChainBp(Breakpoint.Widescreen);
+
+    public FontWeightBuilder OnUltrawide => ChainBp(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private FontWeightBuilder Chain(string value)
@@ -94,7 +99,7 @@ public sealed class FontWeightBuilder : ICssBuilder
             if (cls.Length == 0)
                 continue;
 
-            string bp = BreakpointUtilities.GetBreakpointToken(rule.Breakpoint);
+            string bp = BreakpointUtil.GetBreakpointToken(rule.Breakpoint);
             if (bp.Length != 0)
                 cls = InsertBreakpoint(cls, bp);
 

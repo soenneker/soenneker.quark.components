@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
-using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.ObjectFit;
 
@@ -72,11 +72,6 @@ public sealed class ObjectFitBuilder : ICssBuilder
     /// <summary>
     /// Apply on mobile devices (landscape phones, 576px and up).
     /// </summary>
-    public ObjectFitBuilder OnMobile => ChainWithBreakpoint(Breakpoint.Mobile);
-
-    /// <summary>
-    /// Apply on tablet devices (tablets, 768px and up).
-    /// </summary>
     public ObjectFitBuilder OnTablet => ChainWithBreakpoint(Breakpoint.Tablet);
 
     /// <summary>
@@ -92,7 +87,8 @@ public sealed class ObjectFitBuilder : ICssBuilder
     /// <summary>
     /// Apply on wide screen devices (larger desktops, 1400px and up).
     /// </summary>
-    public ObjectFitBuilder OnWideScreen => ChainWithBreakpoint(Breakpoint.ExtraExtraLarge);
+    public ObjectFitBuilder OnWidescreen => ChainWithBreakpoint(Breakpoint.Widescreen);
+    public ObjectFitBuilder OnUltrawide => ChainWithBreakpoint(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ObjectFitBuilder ChainWithFit(string fit)
@@ -134,7 +130,7 @@ public sealed class ObjectFitBuilder : ICssBuilder
             if (cls.Length == 0)
                 continue;
 
-            string bp = BreakpointUtilities.GetBreakpointClass(rule.Breakpoint);
+            string bp = BreakpointUtil.GetBreakpointClass(rule.Breakpoint);
             if (bp.Length != 0)
                 cls = InsertBreakpoint(cls, bp);
 

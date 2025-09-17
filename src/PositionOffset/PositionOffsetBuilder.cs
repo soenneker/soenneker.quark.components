@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
 using Soenneker.Quark.Enums.Size;
-using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.PositionOffset;
 
@@ -49,11 +49,11 @@ public sealed class PositionOffsetBuilder : ICssBuilder
     public PositionOffsetBuilder TranslateMiddleY => Chain("translate", "middle-y");
 
     public PositionOffsetBuilder OnPhone => ChainBp(Breakpoint.Phone);
-    public PositionOffsetBuilder OnMobile => ChainBp(Breakpoint.Mobile);
     public PositionOffsetBuilder OnTablet => ChainBp(Breakpoint.Tablet);
     public PositionOffsetBuilder OnLaptop => ChainBp(Breakpoint.Laptop);
     public PositionOffsetBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
-    public PositionOffsetBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
+    public PositionOffsetBuilder OnWidescreen => ChainBp(Breakpoint.Widescreen);
+    public PositionOffsetBuilder OnUltrawide => ChainBp(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private PositionOffsetBuilder Chain(string property, string value)
@@ -91,7 +91,7 @@ public sealed class PositionOffsetBuilder : ICssBuilder
             if (cls.Length == 0)
                 continue;
 
-            string bp = BreakpointUtilities.GetBreakpointToken(rule.Breakpoint);
+            string bp = BreakpointUtil.GetBreakpointToken(rule.Breakpoint);
             if (bp.Length != 0)
                 cls = InsertBreakpoint(cls, bp);
 
@@ -175,34 +175,6 @@ public sealed class PositionOffsetBuilder : ICssBuilder
         };
         if (cssVal.Length == 0) return null;
         return $"{cssProp}: {cssVal}";
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static string GetBp(Breakpoint? breakpoint)
-    {
-        if (breakpoint is null) return string.Empty;
-        switch (breakpoint)
-        {
-            case Breakpoint.PhoneValue:
-            case Breakpoint.ExtraSmallValue:
-                return string.Empty;
-            case Breakpoint.MobileValue:
-            case Breakpoint.SmallValue:
-                return Size.Small.Value;
-            case Breakpoint.TabletValue:
-            case Breakpoint.MediumValue:
-                return Size.Medium.Value;
-            case Breakpoint.LaptopValue:
-            case Breakpoint.LargeValue:
-                return Size.Large.Value;
-            case Breakpoint.DesktopValue:
-            case Breakpoint.ExtraLargeValue:
-                return Size.ExtraLarge.Value;
-            case Breakpoint.ExtraExtraLargeValue:
-                return "xxl";
-            default:
-                return string.Empty;
-        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

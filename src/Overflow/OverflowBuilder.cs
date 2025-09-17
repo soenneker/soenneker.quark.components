@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
 using Soenneker.Quark.Enums.Size;
-using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.Overflow;
 
@@ -50,11 +50,11 @@ public sealed class OverflowBuilder : ICssBuilder
 
     // ----- Breakpoint chaining -----
     public OverflowBuilder OnPhone => ChainBp(Breakpoint.Phone);
-    public OverflowBuilder OnMobile => ChainBp(Breakpoint.Mobile);
     public OverflowBuilder OnTablet => ChainBp(Breakpoint.Tablet);
     public OverflowBuilder OnLaptop => ChainBp(Breakpoint.Laptop);
     public OverflowBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
-    public OverflowBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
+    public OverflowBuilder OnWidescreen => ChainBp(Breakpoint.Widescreen);
+    public OverflowBuilder OnUltrawide => ChainBp(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private OverflowBuilder Chain(string overflow)
@@ -96,7 +96,7 @@ public sealed class OverflowBuilder : ICssBuilder
             if (baseClass.Length == 0)
                 continue;
 
-            string bp = BreakpointUtilities.GetBreakpointToken(rule.Breakpoint);
+            string bp = BreakpointUtil.GetBreakpointToken(rule.Breakpoint);
             if (bp.Length != 0)
                 baseClass = InsertBreakpoint(baseClass, bp);
 
@@ -148,34 +148,7 @@ public sealed class OverflowBuilder : ICssBuilder
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static string GetBp(Breakpoint? breakpoint)
-    {
-        if (breakpoint is null)
-            return string.Empty;
-
-        switch (breakpoint)
-        {
-            case Breakpoint.PhoneValue:
-            case Breakpoint.ExtraSmallValue:
-                return string.Empty;
-            case Breakpoint.MobileValue:
-            case Breakpoint.SmallValue:
-                return Size.Small.Value;
-            case Breakpoint.TabletValue:
-            case Breakpoint.MediumValue:
-                return Size.Medium.Value;
-            case Breakpoint.LaptopValue:
-            case Breakpoint.LargeValue:
-                return Size.Large.Value;
-            case Breakpoint.DesktopValue:
-            case Breakpoint.ExtraLargeValue:
-                return Size.ExtraLarge.Value;
-            case Breakpoint.ExtraExtraLargeValue:
-                return "xxl";
-            default:
-                return string.Empty;
-        }
-    }
+    private static string GetBp(Breakpoint? breakpoint) => breakpoint?.Value ?? string.Empty;
 
     /// <summary>
     /// Insert breakpoint token as: "overflow-hidden" + "md" ? "overflow-md-hidden".

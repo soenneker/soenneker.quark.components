@@ -5,4 +5,4 @@ namespace Soenneker.Quark.Components.Gap;
 /// <summary>
 /// Represents a single gap rule with optional breakpoint.
 /// </summary>
-internal record GapRule(int Size, Breakpoint? Breakpoint = null);
+internal record GapRule(string Size, Breakpoint? Breakpoint = null);

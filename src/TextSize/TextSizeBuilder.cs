@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
 using Soenneker.Quark.Enums.Size;
-using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.TextSize;
 
@@ -61,11 +61,11 @@ public sealed class TextSizeBuilder : ICssBuilder
 
     // ----- Breakpoint chaining -----
     public TextSizeBuilder OnPhone => ChainBp(Breakpoint.Phone);
-    public TextSizeBuilder OnMobile => ChainBp(Breakpoint.Mobile);
     public TextSizeBuilder OnTablet => ChainBp(Breakpoint.Tablet);
     public TextSizeBuilder OnLaptop => ChainBp(Breakpoint.Laptop);
     public TextSizeBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
-    public TextSizeBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
+    public TextSizeBuilder OnWidescreen => ChainBp(Breakpoint.Widescreen);
+    public TextSizeBuilder OnUltrawide => ChainBp(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private TextSizeBuilder ChainSize(string size)
@@ -107,7 +107,7 @@ public sealed class TextSizeBuilder : ICssBuilder
             if (sizeClass.Length == 0)
                 continue;
 
-            string bp = BreakpointUtilities.GetBreakpointClass(rule.Breakpoint);
+            string bp = BreakpointUtil.GetBreakpointClass(rule.Breakpoint);
             if (bp.Length != 0)
                 sizeClass = InsertBreakpoint(sizeClass, bp);
 

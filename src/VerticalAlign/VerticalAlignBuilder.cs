@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
 using Soenneker.Quark.Enums.Size;
-using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.VerticalAlign;
 
@@ -37,11 +37,11 @@ public sealed class VerticalAlignBuilder : ICssBuilder
     public VerticalAlignBuilder Unset => Chain(Enums.GlobalKeywords.GlobalKeyword.UnsetValue);
 
     public VerticalAlignBuilder OnPhone => ChainBp(Breakpoint.Phone);
-    public VerticalAlignBuilder OnMobile => ChainBp(Breakpoint.Mobile);
     public VerticalAlignBuilder OnTablet => ChainBp(Breakpoint.Tablet);
     public VerticalAlignBuilder OnLaptop => ChainBp(Breakpoint.Laptop);
     public VerticalAlignBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
-    public VerticalAlignBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
+    public VerticalAlignBuilder OnWidescreen => ChainBp(Breakpoint.Widescreen);
+    public VerticalAlignBuilder OnUltrawide => ChainBp(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private VerticalAlignBuilder Chain(string value)
@@ -87,7 +87,7 @@ public sealed class VerticalAlignBuilder : ICssBuilder
             if (cls.Length == 0)
                 continue;
 
-            string bp = BreakpointUtilities.GetBreakpointToken(rule.Breakpoint);
+            string bp = BreakpointUtil.GetBreakpointToken(rule.Breakpoint);
             if (bp.Length != 0)
                 cls = InsertBreakpoint(cls, bp);
 
@@ -122,32 +122,7 @@ public sealed class VerticalAlignBuilder : ICssBuilder
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static string GetBp(Breakpoint? breakpoint)
-    {
-        if (breakpoint is null) return string.Empty;
-        switch (breakpoint)
-        {
-            case Breakpoint.PhoneValue:
-            case Breakpoint.ExtraSmallValue:
-                return string.Empty;
-            case Breakpoint.MobileValue:
-            case Breakpoint.SmallValue:
-                return Size.Small.Value;
-            case Breakpoint.TabletValue:
-            case Breakpoint.MediumValue:
-                return Size.Medium.Value;
-            case Breakpoint.LaptopValue:
-            case Breakpoint.LargeValue:
-                return Size.Large.Value;
-            case Breakpoint.DesktopValue:
-            case Breakpoint.ExtraLargeValue:
-                return Size.ExtraLarge.Value;
-            case Breakpoint.ExtraExtraLargeValue:
-                return "xxl";
-            default:
-                return string.Empty;
-        }
-    }
+    private static string GetBp(Breakpoint? breakpoint) => breakpoint?.Value ?? string.Empty;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string InsertBreakpoint(string className, string bp)

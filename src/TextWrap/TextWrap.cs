@@ -4,8 +4,8 @@ namespace Soenneker.Quark.Components.TextWrap;
 
 public static class TextWrap
 {
-    public static TextWrapBuilder Wrap => new("wrap");
-    public static TextWrapBuilder NoWrap => new("nowrap");
+    public static TextWrapBuilder Wrap => new(Soenneker.Quark.Enums.TextWraps.TextWrap.WrapValue);
+    public static TextWrapBuilder NoWrap => new(Soenneker.Quark.Enums.TextWraps.TextWrap.NoWrapValue);
 
     public static TextWrapBuilder Inherit => new(GlobalKeyword.InheritValue);
     public static TextWrapBuilder Initial => new(GlobalKeyword.InitialValue);

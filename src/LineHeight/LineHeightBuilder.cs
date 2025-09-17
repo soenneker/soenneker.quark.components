@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
 using Soenneker.Quark.Enums.Size;
-using Soenneker.Quark.Components.Utilities;
+using Soenneker.Quark.Enums.Scales;
 
 namespace Soenneker.Quark.Components.LineHeight;
 
@@ -29,17 +30,17 @@ public sealed class LineHeightBuilder : ICssBuilder
             _rules.AddRange(rules);
     }
 
-    public LineHeightBuilder L1 => Chain("1");
+    public LineHeightBuilder L1 => Chain(Scale.S1.Value);
     public LineHeightBuilder Sm => Chain(Size.Small.Value);
     public LineHeightBuilder Base => Chain("base");
     public LineHeightBuilder Lg => Chain(Size.Large.Value);
 
     public LineHeightBuilder OnPhone => ChainBp(Breakpoint.Phone);
-    public LineHeightBuilder OnMobile => ChainBp(Breakpoint.Mobile);
     public LineHeightBuilder OnTablet => ChainBp(Breakpoint.Tablet);
     public LineHeightBuilder OnLaptop => ChainBp(Breakpoint.Laptop);
     public LineHeightBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
-    public LineHeightBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
+    public LineHeightBuilder OnWidescreen => ChainBp(Breakpoint.Widescreen);
+    public LineHeightBuilder OnUltrawide => ChainBp(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private LineHeightBuilder Chain(string value)
@@ -74,7 +75,7 @@ public sealed class LineHeightBuilder : ICssBuilder
             LineHeightRule rule = _rules[i];
             string cls = rule.Value switch
             {
-                "1" => _classLh1,
+                Scale.S1Value => _classLh1,
                 "sm" => _classLhSm,
                 "base" => _classLhBase,
                 "lg" => _classLhLg,
@@ -83,7 +84,7 @@ public sealed class LineHeightBuilder : ICssBuilder
             if (cls.Length == 0)
                 continue;
 
-            string bp = BreakpointUtilities.GetBreakpointToken(rule.Breakpoint);
+            string bp = BreakpointUtil.GetBreakpointToken(rule.Breakpoint);
             if (bp.Length != 0)
                 cls = InsertBreakpoint(cls, bp);
 
@@ -106,7 +107,7 @@ public sealed class LineHeightBuilder : ICssBuilder
             LineHeightRule rule = _rules[i];
             string? css = rule.Value switch
             {
-                "1" => "1",
+                Scale.S1Value => "1",
                 "sm" => "1.25",
                 "base" => "1.5",
                 "lg" => "2",

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
-using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.Height;
 
@@ -40,11 +40,11 @@ public sealed class HeightBuilder : ICssBuilder
     public HeightBuilder Auto => ChainWithSize("auto");
 
     public HeightBuilder OnPhone => ChainWithBreakpoint(Breakpoint.Phone);
-    public HeightBuilder OnMobile => ChainWithBreakpoint(Breakpoint.Mobile);
     public HeightBuilder OnTablet => ChainWithBreakpoint(Breakpoint.Tablet);
     public HeightBuilder OnLaptop => ChainWithBreakpoint(Breakpoint.Laptop);
     public HeightBuilder OnDesktop => ChainWithBreakpoint(Breakpoint.Desktop);
-    public HeightBuilder OnWideScreen => ChainWithBreakpoint(Breakpoint.ExtraExtraLarge);
+    public HeightBuilder OnWidescreen => ChainWithBreakpoint(Breakpoint.Widescreen);
+    public HeightBuilder OnUltrawide => ChainWithBreakpoint(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private HeightBuilder ChainWithSize(string size)
@@ -83,7 +83,7 @@ public sealed class HeightBuilder : ICssBuilder
             if (cls.Length == 0)
                 continue;
 
-            string bp = BreakpointUtilities.GetBreakpointClass(rule.Breakpoint);
+            string bp = BreakpointUtil.GetBreakpointClass(rule.Breakpoint);
             if (bp.Length != 0)
                 cls = InsertBreakpoint(cls, bp);
 

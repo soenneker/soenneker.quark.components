@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
-using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.Gap;
 
@@ -23,9 +23,9 @@ public sealed class GapBuilder : ICssBuilder
     private const string _classGap5 = "gap-5";
     private const string _stylePrefix = "gap: ";
 
-    internal GapBuilder(int size, Breakpoint? breakpoint = null)
+    internal GapBuilder(string size, Breakpoint? breakpoint = null)
     {
-        if (size >= 0)
+        if (!string.IsNullOrEmpty(size))
             _rules.Add(new GapRule(size, breakpoint));
     }
 
@@ -38,32 +38,32 @@ public sealed class GapBuilder : ICssBuilder
     /// <summary>
     /// Chain with a new size for the next rule.
     /// </summary>
-    public GapBuilder S0 => ChainWithSize(0);
+    public GapBuilder S0 => ChainWithSize("0");
 
     /// <summary>
     /// Chain with a new size for the next rule.
     /// </summary>
-    public GapBuilder S1 => ChainWithSize(1);
+    public GapBuilder S1 => ChainWithSize("1");
 
     /// <summary>
     /// Chain with a new size for the next rule.
     /// </summary>
-    public GapBuilder S2 => ChainWithSize(2);
+    public GapBuilder S2 => ChainWithSize("2");
 
     /// <summary>
     /// Chain with a new size for the next rule.
     /// </summary>
-    public GapBuilder S3 => ChainWithSize(3);
+    public GapBuilder S3 => ChainWithSize("3");
 
     /// <summary>
     /// Chain with a new size for the next rule.
     /// </summary>
-    public GapBuilder S4 => ChainWithSize(4);
+    public GapBuilder S4 => ChainWithSize("4");
 
     /// <summary>
     /// Chain with a new size for the next rule.
     /// </summary>
-    public GapBuilder S5 => ChainWithSize(5);
+    public GapBuilder S5 => ChainWithSize("5");
 
     /// <summary>
     /// Apply on phone devices (portrait phones, less than 576px).
@@ -72,11 +72,6 @@ public sealed class GapBuilder : ICssBuilder
 
     /// <summary>
     /// Apply on mobile devices (landscape phones, 576px and up).
-    /// </summary>
-    public GapBuilder OnMobile => ChainWithBreakpoint(Breakpoint.Mobile);
-
-    /// <summary>
-    /// Apply on tablet devices (tablets, 768px and up).
     /// </summary>
     public GapBuilder OnTablet => ChainWithBreakpoint(Breakpoint.Tablet);
 
@@ -93,10 +88,11 @@ public sealed class GapBuilder : ICssBuilder
     /// <summary>
     /// Apply on wide screen devices (larger desktops, 1400px and up).
     /// </summary>
-    public GapBuilder OnWideScreen => ChainWithBreakpoint(Breakpoint.ExtraExtraLarge);
+    public GapBuilder OnWidescreen => ChainWithBreakpoint(Breakpoint.Widescreen);
+    public GapBuilder OnUltrawide => ChainWithBreakpoint(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private GapBuilder ChainWithSize(int size)
+    private GapBuilder ChainWithSize(string size)
     {
         _rules.Add(new GapRule(size, null));
         return this;
@@ -107,7 +103,7 @@ public sealed class GapBuilder : ICssBuilder
     {
         if (_rules.Count == 0)
         {
-            _rules.Add(new GapRule(0, breakpoint));
+            _rules.Add(new GapRule("0", breakpoint));
             return this;
         }
 
@@ -135,7 +131,7 @@ public sealed class GapBuilder : ICssBuilder
             if (cls.Length == 0)
                 continue;
 
-            string bp = BreakpointUtilities.GetBreakpointClass(rule.Breakpoint);
+            string bp = BreakpointUtil.GetBreakpointClass(rule.Breakpoint);
             if (bp.Length != 0)
                 cls = InsertBreakpoint(cls, bp);
 
@@ -177,31 +173,31 @@ public sealed class GapBuilder : ICssBuilder
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static string GetSizeClass(int size)
+    private static string GetSizeClass(string size)
     {
         return size switch
         {
-            0 => _classGap0,
-            1 => _classGap1,
-            2 => _classGap2,
-            3 => _classGap3,
-            4 => _classGap4,
-            5 => _classGap5,
+            "0" => _classGap0,
+            "1" => _classGap1,
+            "2" => _classGap2,
+            "3" => _classGap3,
+            "4" => _classGap4,
+            "5" => _classGap5,
             _ => string.Empty
         };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static string? GetSizeValue(int size)
+    private static string? GetSizeValue(string size)
     {
         return size switch
         {
-            0 => "0",
-            1 => "0.25rem",
-            2 => "0.5rem",
-            3 => "1rem",
-            4 => "1.5rem",
-            5 => "3rem",
+            "0" => "0",
+            "1" => "0.25rem",
+            "2" => "0.5rem",
+            "3" => "1rem",
+            "4" => "1.5rem",
+            "5" => "3rem",
             _ => null
         };
     }

@@ -4,9 +4,9 @@ namespace Soenneker.Quark.Components.TextTransform;
 
 public static class TextTransform
 {
-    public static TextTransformBuilder Lowercase => new("lowercase");
-    public static TextTransformBuilder Uppercase => new("uppercase");
-    public static TextTransformBuilder Capitalize => new("capitalize");
+    public static TextTransformBuilder Lowercase => new(Soenneker.Quark.Enums.TextTransforms.TextTransform.LowercaseValue);
+    public static TextTransformBuilder Uppercase => new(Soenneker.Quark.Enums.TextTransforms.TextTransform.UppercaseValue);
+    public static TextTransformBuilder Capitalize => new(Soenneker.Quark.Enums.TextTransforms.TextTransform.CapitalizeValue);
 
     public static TextTransformBuilder Inherit => new(GlobalKeyword.InheritValue);
     public static TextTransformBuilder Initial => new(GlobalKeyword.InitialValue);

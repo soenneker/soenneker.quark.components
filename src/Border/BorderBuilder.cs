@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
 using Soenneker.Quark.Enums.ElementSides;
-using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.Border;
 
@@ -20,7 +20,6 @@ public sealed class BorderBuilder : ICssBuilder
 
     // ----- Size tokens -----
     private const string _token0 = "0";
-    private const string _token1 = "1";
     private const string _token2 = "2";
     private const string _token3 = "3";
     private const string _token4 = "4";
@@ -37,7 +36,7 @@ public sealed class BorderBuilder : ICssBuilder
     internal BorderBuilder(int size, Breakpoint? breakpoint = null)
     {
         if (size >= 0)
-            _rules.Add(new BorderRule(size, ElementSide.All, breakpoint));
+            _rules.Add(new BorderRule(size.ToString(), ElementSide.All, breakpoint));
     }
 
     internal BorderBuilder(List<BorderRule> rules)
@@ -67,16 +66,16 @@ public sealed class BorderBuilder : ICssBuilder
 
     // ----- Breakpoint chaining -----
     public BorderBuilder OnPhone => ChainWithBreakpoint(Breakpoint.Phone);
-    public BorderBuilder OnMobile => ChainWithBreakpoint(Breakpoint.Mobile);
     public BorderBuilder OnTablet => ChainWithBreakpoint(Breakpoint.Tablet);
     public BorderBuilder OnLaptop => ChainWithBreakpoint(Breakpoint.Laptop);
     public BorderBuilder OnDesktop => ChainWithBreakpoint(Breakpoint.Desktop);
-    public BorderBuilder OnWideScreen => ChainWithBreakpoint(Breakpoint.ExtraExtraLarge);
+    public BorderBuilder OnWidescreen => ChainWithBreakpoint(Breakpoint.Widescreen);
+    public BorderBuilder OnUltrawide => ChainWithBreakpoint(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private BorderBuilder AddRule(ElementSide side)
     {
-        int size = _rules.Count > 0 ? _rules[^1].Size : 0;
+        string size = _rules.Count > 0 ? _rules[^1].Size : "0";
         Breakpoint? bp = _rules.Count > 0 ? _rules[^1].Breakpoint : null;
 
         if (_rules.Count > 0 && _rules[^1].Side == ElementSide.All)
@@ -94,7 +93,7 @@ public sealed class BorderBuilder : ICssBuilder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private BorderBuilder ChainWithSize(int size)
     {
-        _rules.Add(new BorderRule(size, ElementSide.All, null));
+        _rules.Add(new BorderRule(size.ToString(), ElementSide.All, null));
         return this;
     }
 
@@ -103,7 +102,7 @@ public sealed class BorderBuilder : ICssBuilder
     {
         if (_rules.Count == 0)
         {
-            _rules.Add(new BorderRule(0, ElementSide.All, breakpoint));
+            _rules.Add(new BorderRule("0", ElementSide.All, breakpoint));
             return this;
         }
 
@@ -126,13 +125,13 @@ public sealed class BorderBuilder : ICssBuilder
         {
             BorderRule rule = _rules[i];
 
-            string sizeTok = GetSizeToken(rule.Size);
+            string sizeTok = rule.Size;
 
             if (sizeTok.Length == 0)
                 continue;
 
             string sideTok = GetSideToken(rule.Side);
-            string bpTok = BreakpointUtilities.GetBreakpointToken(rule.Breakpoint);
+            string bpTok = BreakpointUtil.GetBreakpointToken(rule.Breakpoint);
 
             if (!first)
                 sb.Append(' ');
@@ -244,21 +243,6 @@ public sealed class BorderBuilder : ICssBuilder
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static string GetSizeToken(int size)
-    {
-        return size switch
-        {
-            0 => _token0,
-            1 => _token1,
-            2 => _token2,
-            3 => _token3,
-            4 => _token4,
-            5 => _token5,
-            _ => string.Empty
-        };
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetSideToken(ElementSide side)
     {
         switch (side)
@@ -289,16 +273,16 @@ public sealed class BorderBuilder : ICssBuilder
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static string? GetSizeValue(int size)
+    private static string? GetSizeValue(string size)
     {
         return size switch
         {
-            0 => "0",
-            1 => "1px",
-            2 => "2px",
-            3 => "3px",
-            4 => "4px",
-            5 => "5px",
+            "0" => "0",
+            "1" => "1px",
+            "2" => "2px",
+            "3" => "3px",
+            "4" => "4px",
+            "5" => "5px",
             _ => null
         };
     }

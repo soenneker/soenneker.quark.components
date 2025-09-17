@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
-using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.FontStyle;
 
@@ -36,11 +36,11 @@ public sealed class FontStyleBuilder : ICssBuilder
     public FontStyleBuilder Unset => Chain(Enums.GlobalKeywords.GlobalKeyword.UnsetValue);
 
     public FontStyleBuilder OnPhone => ChainBp(Breakpoint.Phone);
-    public FontStyleBuilder OnMobile => ChainBp(Breakpoint.Mobile);
     public FontStyleBuilder OnTablet => ChainBp(Breakpoint.Tablet);
     public FontStyleBuilder OnLaptop => ChainBp(Breakpoint.Laptop);
     public FontStyleBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
-    public FontStyleBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
+    public FontStyleBuilder OnWidescreen => ChainBp(Breakpoint.Widescreen);
+    public FontStyleBuilder OnUltrawide => ChainBp(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private FontStyleBuilder Chain(string value)
@@ -82,7 +82,7 @@ public sealed class FontStyleBuilder : ICssBuilder
             if (cls.Length == 0)
                 continue;
 
-            string bp = BreakpointUtilities.GetBreakpointToken(rule.Breakpoint);
+            string bp = BreakpointUtil.GetBreakpointToken(rule.Breakpoint);
             if (bp.Length != 0)
                 cls = InsertBreakpoint(cls, bp);
 

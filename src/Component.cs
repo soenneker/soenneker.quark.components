@@ -344,7 +344,7 @@ public abstract class Component : ComponentBase, Abstract.IComponent
                             if (kv.Value is EventCallback<MouseEventArgs> userClick && OnClick.HasDelegate)
                                 attrs["onclick"] = Compose(this, HandleClick, userClick);
                             else
-                                attrs["onclick"] = kv.Value;
+                                attrs["onclick"] = kv.Value!;
                             break;
 
                         case "ondblclick":
@@ -352,7 +352,7 @@ public abstract class Component : ComponentBase, Abstract.IComponent
                             if (kv.Value is EventCallback<MouseEventArgs> userDbl && OnDoubleClick.HasDelegate)
                                 attrs["ondblclick"] = Compose(this, HandleDoubleClick, userDbl);
                             else
-                                attrs["ondblclick"] = kv.Value;
+                                attrs["ondblclick"] = kv.Value!;
                             break;
 
                         case "onmouseover":
@@ -360,7 +360,7 @@ public abstract class Component : ComponentBase, Abstract.IComponent
                             if (kv.Value is EventCallback<MouseEventArgs> userOver && OnMouseOver.HasDelegate)
                                 attrs["onmouseover"] = Compose(this, HandleMouseOver, userOver);
                             else
-                                attrs["onmouseover"] = kv.Value;
+                                attrs["onmouseover"] = kv.Value!;
                             break;
 
                         case "onmouseout":
@@ -368,7 +368,7 @@ public abstract class Component : ComponentBase, Abstract.IComponent
                             if (kv.Value is EventCallback<MouseEventArgs> userOut && OnMouseOut.HasDelegate)
                                 attrs["onmouseout"] = Compose(this, HandleMouseOut, userOut);
                             else
-                                attrs["onmouseout"] = kv.Value;
+                                attrs["onmouseout"] = kv.Value!;
                             break;
 
                         case "onkeydown":
@@ -376,7 +376,7 @@ public abstract class Component : ComponentBase, Abstract.IComponent
                             if (kv.Value is EventCallback<KeyboardEventArgs> userKey && OnKeyDown.HasDelegate)
                                 attrs["onkeydown"] = Compose(this, HandleKeyDown, userKey);
                             else
-                                attrs["onkeydown"] = kv.Value;
+                                attrs["onkeydown"] = kv.Value!;
                             break;
 
                         case "onfocus":
@@ -384,7 +384,7 @@ public abstract class Component : ComponentBase, Abstract.IComponent
                             if (kv.Value is EventCallback<FocusEventArgs> userFocus && OnFocus.HasDelegate)
                                 attrs["onfocus"] = Compose(this, HandleFocus, userFocus);
                             else
-                                attrs["onfocus"] = kv.Value;
+                                attrs["onfocus"] = kv.Value!;
                             break;
 
                         case "onblur":
@@ -392,11 +392,11 @@ public abstract class Component : ComponentBase, Abstract.IComponent
                             if (kv.Value is EventCallback<FocusEventArgs> userBlur && OnBlur.HasDelegate)
                                 attrs["onblur"] = Compose(this, HandleBlur, userBlur);
                             else
-                                attrs["onblur"] = kv.Value;
+                                attrs["onblur"] = kv.Value!;
                             break;
 
                         default:
-                            attrs[kv.Key] = kv.Value;
+                            attrs[kv.Key!] = kv.Value!;
                             break;
                     }
                 }

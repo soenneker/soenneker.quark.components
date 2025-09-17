@@ -4,7 +4,7 @@ namespace Soenneker.Quark.Components.Visibility;
 
 public static class Visibility
 {
-    public static VisibilityBuilder Visible => new("visible");
+    public static VisibilityBuilder Visible => new(Soenneker.Quark.Enums.Visibilities.Visibility.VisibleValue);
 
     public static VisibilityBuilder Invisible => new("invisible");
 

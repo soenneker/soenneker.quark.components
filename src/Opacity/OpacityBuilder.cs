@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
-using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.Opacity;
 
@@ -30,11 +30,11 @@ public sealed class OpacityBuilder : ICssBuilder
     public OpacityBuilder V100 => Chain(100);
 
     public OpacityBuilder OnPhone => ChainBp(Breakpoint.Phone);
-    public OpacityBuilder OnMobile => ChainBp(Breakpoint.Mobile);
     public OpacityBuilder OnTablet => ChainBp(Breakpoint.Tablet);
     public OpacityBuilder OnLaptop => ChainBp(Breakpoint.Laptop);
     public OpacityBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
-    public OpacityBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
+    public OpacityBuilder OnWidescreen => ChainBp(Breakpoint.Widescreen);
+    public OpacityBuilder OnUltrawide => ChainBp(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private OpacityBuilder Chain(int value)
@@ -71,7 +71,7 @@ public sealed class OpacityBuilder : ICssBuilder
             if (cls.Length == 0)
                 continue;
 
-            string bp = BreakpointUtilities.GetBreakpointToken(rule.Breakpoint);
+            string bp = BreakpointUtil.GetBreakpointToken(rule.Breakpoint);
             if (bp.Length != 0)
                 cls = InsertBreakpoint(cls, bp);
 

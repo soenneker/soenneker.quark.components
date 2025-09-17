@@ -2,12 +2,12 @@ using System.Runtime.CompilerServices;
 using Soenneker.Quark.Enums.Breakpoints;
 using Soenneker.Quark.Enums.Size;
 
-namespace Soenneker.Quark.Components.Utilities;
+namespace Soenneker.Quark.Components.Utils;
 
 /// <summary>
 /// Shared utilities for converting breakpoints to CSS class tokens.
 /// </summary>
-public static class BreakpointUtilities
+public static class BreakpointUtil
 {
     /// <summary>
     /// Converts a breakpoint to its corresponding CSS class token.
@@ -18,31 +18,7 @@ public static class BreakpointUtilities
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string GetBreakpointToken(Breakpoint? breakpoint)
     {
-        if (breakpoint is null)
-            return string.Empty;
-
-        switch (breakpoint)
-        {
-            case Breakpoint.PhoneValue:
-            case Breakpoint.ExtraSmallValue:
-                return string.Empty;
-            case Breakpoint.MobileValue:
-            case Breakpoint.SmallValue:
-                return Size.Small.Value;
-            case Breakpoint.TabletValue:
-            case Breakpoint.MediumValue:
-                return Size.Medium.Value;
-            case Breakpoint.LaptopValue:
-            case Breakpoint.LargeValue:
-                return Size.Large.Value;
-            case Breakpoint.DesktopValue:
-            case Breakpoint.ExtraLargeValue:
-                return Size.ExtraLarge.Value;
-            case Breakpoint.ExtraExtraLargeValue:
-                return Size.ExtraExtraLarge.Value;
-            default:
-                return string.Empty;
-        }
+        return breakpoint?.Value ?? string.Empty;
     }
 
     /// <summary>

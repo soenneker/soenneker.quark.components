@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
 using Soenneker.Quark.Enums.Size;
-using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.PointerEvents;
 
@@ -48,11 +48,11 @@ public sealed class PointerEventsBuilder : ICssBuilder
     public PointerEventsBuilder Unset => Chain(Enums.GlobalKeywords.GlobalKeyword.UnsetValue);
 
     public PointerEventsBuilder OnPhone => ChainBp(Breakpoint.Phone);
-    public PointerEventsBuilder OnMobile => ChainBp(Breakpoint.Mobile);
     public PointerEventsBuilder OnTablet => ChainBp(Breakpoint.Tablet);
     public PointerEventsBuilder OnLaptop => ChainBp(Breakpoint.Laptop);
     public PointerEventsBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
-    public PointerEventsBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
+    public PointerEventsBuilder OnWidescreen => ChainBp(Breakpoint.Widescreen);
+    public PointerEventsBuilder OnUltrawide => ChainBp(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private PointerEventsBuilder Chain(string value)
@@ -99,7 +99,7 @@ public sealed class PointerEventsBuilder : ICssBuilder
             if (baseClass.Length == 0)
                 continue;
 
-            string bp = BreakpointUtilities.GetBreakpointToken(rule.Breakpoint);
+            string bp = BreakpointUtil.GetBreakpointToken(rule.Breakpoint);
             if (bp.Length != 0)
                 baseClass = InsertBreakpoint(baseClass, bp);
 
@@ -149,34 +149,7 @@ public sealed class PointerEventsBuilder : ICssBuilder
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static string GetBp(Breakpoint? breakpoint)
-    {
-        if (breakpoint is null)
-            return string.Empty;
-
-        switch (breakpoint)
-        {
-            case Breakpoint.PhoneValue:
-            case Breakpoint.ExtraSmallValue:
-                return string.Empty;
-            case Breakpoint.MobileValue:
-            case Breakpoint.SmallValue:
-                return Size.Small.Value;
-            case Breakpoint.TabletValue:
-            case Breakpoint.MediumValue:
-                return Size.Medium.Value;
-            case Breakpoint.LaptopValue:
-            case Breakpoint.LargeValue:
-                return Size.Large.Value;
-            case Breakpoint.DesktopValue:
-            case Breakpoint.ExtraLargeValue:
-                return Size.ExtraLarge.Value;
-            case Breakpoint.ExtraExtraLargeValue:
-                return "xxl";
-            default:
-                return string.Empty;
-        }
-    }
+    private static string GetBp(Breakpoint? breakpoint) => breakpoint?.Value ?? string.Empty;
 
     /// <summary>
     /// Insert breakpoint token as: "pe-auto" + "md" ? "pe-md-auto".

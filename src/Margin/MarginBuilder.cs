@@ -2,9 +2,10 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
 using Soenneker.Quark.Enums.ElementSides;
-using Soenneker.Quark.Components.Utilities;
+using Soenneker.Quark.Enums.Scales;
 
 namespace Soenneker.Quark.Components.Margin;
 
@@ -20,11 +21,6 @@ public sealed class MarginBuilder : ICssBuilder
 
     // ----- Size tokens -----
     private const string _token0 = "0";
-    private const string _token1 = "1";
-    private const string _token2 = "2";
-    private const string _token3 = "3";
-    private const string _token4 = "4";
-    private const string _token5 = "5";
     private const string _tokenAuto = "auto";
 
     // ----- Side tokens (Bootstrap naming) -----
@@ -60,20 +56,20 @@ public sealed class MarginBuilder : ICssBuilder
 
     // ----- Size chaining -----
     public MarginBuilder S0 => ChainWithSize(0);
-    public MarginBuilder S1 => ChainWithSize(1);
-    public MarginBuilder S2 => ChainWithSize(2);
-    public MarginBuilder S3 => ChainWithSize(3);
-    public MarginBuilder S4 => ChainWithSize(4);
-    public MarginBuilder S5 => ChainWithSize(5);
+    public MarginBuilder S1 => ChainWithSize(Scale.S1);
+    public MarginBuilder S2 => ChainWithSize(Scale.S2);
+    public MarginBuilder S3 => ChainWithSize(Scale.S3);
+    public MarginBuilder S4 => ChainWithSize(Scale.S4);
+    public MarginBuilder S5 => ChainWithSize(Scale.S5);
     public MarginBuilder Auto => ChainWithSize(-1);
 
     // ----- Breakpoint chaining -----
     public MarginBuilder OnPhone => ChainWithBreakpoint(Breakpoint.Phone);
-    public MarginBuilder OnMobile => ChainWithBreakpoint(Breakpoint.Mobile);
     public MarginBuilder OnTablet => ChainWithBreakpoint(Breakpoint.Tablet);
     public MarginBuilder OnLaptop => ChainWithBreakpoint(Breakpoint.Laptop);
     public MarginBuilder OnDesktop => ChainWithBreakpoint(Breakpoint.Desktop);
-    public MarginBuilder OnWideScreen => ChainWithBreakpoint(Breakpoint.ExtraExtraLarge);
+    public MarginBuilder OnWidescreen => ChainWithBreakpoint(Breakpoint.Widescreen);
+    public MarginBuilder OnUltrawide => ChainWithBreakpoint(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private MarginBuilder AddRule(ElementSide side)
@@ -96,6 +92,14 @@ public sealed class MarginBuilder : ICssBuilder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private MarginBuilder ChainWithSize(int size)
     {
+        _rules.Add(new MarginRule(size, ElementSide.All, null));
+        return this;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private MarginBuilder ChainWithSize(Scale scale)
+    {
+        int size = int.Parse(scale.Value);
         _rules.Add(new MarginRule(size, ElementSide.All, null));
         return this;
     }
@@ -134,7 +138,7 @@ public sealed class MarginBuilder : ICssBuilder
                 continue;
 
             string sideTok = GetSideToken(rule.Side);
-            string bpTok = BreakpointUtilities.GetBreakpointToken(rule.Breakpoint);
+            string bpTok = BreakpointUtil.GetBreakpointToken(rule.Breakpoint);
 
             if (!first)
                 sb.Append(' ');
@@ -250,11 +254,11 @@ public sealed class MarginBuilder : ICssBuilder
             return size switch
             {
                 0 => _token0,
-                1 => _token1,
-                2 => _token2,
-                3 => _token3,
-                4 => _token4,
-                5 => _token5,
+                1 => Scale.S1Value,
+                2 => Scale.S2Value,
+                3 => Scale.S3Value,
+                4 => Scale.S4Value,
+                5 => Scale.S5Value,
                 -1 => _tokenAuto,
                 _ => string.Empty
             };

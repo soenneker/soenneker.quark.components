@@ -4,8 +4,8 @@ using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Enums.Breakpoints;
-using Soenneker.Quark.Components.Utilities;
 using Soenneker.Extensions.String;
+using Soenneker.Quark.Components.Utils;
 
 namespace Soenneker.Quark.Components.Display;
 
@@ -45,11 +45,11 @@ public sealed class DisplayBuilder : ICssBuilder
     public DisplayBuilder Unset => ChainWithDisplay(Enums.GlobalKeywords.GlobalKeyword.UnsetValue);
 
     public DisplayBuilder OnPhone => ChainWithBreakpoint(Breakpoint.Phone);
-    public DisplayBuilder OnMobile => ChainWithBreakpoint(Breakpoint.Mobile);
     public DisplayBuilder OnTablet => ChainWithBreakpoint(Breakpoint.Tablet);
     public DisplayBuilder OnLaptop => ChainWithBreakpoint(Breakpoint.Laptop);
     public DisplayBuilder OnDesktop => ChainWithBreakpoint(Breakpoint.Desktop);
-    public DisplayBuilder OnWideScreen => ChainWithBreakpoint(Breakpoint.ExtraExtraLarge);
+    public DisplayBuilder OnWidescreen => ChainWithBreakpoint(Breakpoint.Widescreen);
+    public DisplayBuilder OnUltrawide => ChainWithBreakpoint(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private DisplayBuilder ChainWithDisplay(string display)
@@ -88,7 +88,7 @@ public sealed class DisplayBuilder : ICssBuilder
             if (cls.Length == 0)
                 continue;
 
-            string bp = BreakpointUtilities.GetBreakpointClass(rule.Breakpoint);
+            string bp = BreakpointUtil.GetBreakpointClass(rule.Breakpoint);
             if (bp.Length != 0)
                 cls = InsertBreakpoint(cls, bp);
 

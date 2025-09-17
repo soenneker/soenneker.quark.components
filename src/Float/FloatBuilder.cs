@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
-using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.Float;
 
@@ -44,11 +44,11 @@ public sealed class FloatBuilder : ICssBuilder
     public FloatBuilder Unset => ChainWithValue(Enums.GlobalKeywords.GlobalKeyword.UnsetValue);
 
     public FloatBuilder OnPhone => ChainWithBreakpoint(Breakpoint.Phone);
-    public FloatBuilder OnMobile => ChainWithBreakpoint(Breakpoint.Mobile);
     public FloatBuilder OnTablet => ChainWithBreakpoint(Breakpoint.Tablet);
     public FloatBuilder OnLaptop => ChainWithBreakpoint(Breakpoint.Laptop);
     public FloatBuilder OnDesktop => ChainWithBreakpoint(Breakpoint.Desktop);
-    public FloatBuilder OnWideScreen => ChainWithBreakpoint(Breakpoint.ExtraExtraLarge);
+    public FloatBuilder OnWidescreen => ChainWithBreakpoint(Breakpoint.Widescreen);
+    public FloatBuilder OnUltrawide => ChainWithBreakpoint(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private FloatBuilder ChainWithValue(string value)
@@ -97,7 +97,7 @@ public sealed class FloatBuilder : ICssBuilder
             if (cls.Length == 0)
                 continue;
 
-            string bp = BreakpointUtilities.GetBreakpointClass(rule.Breakpoint);
+            string bp = BreakpointUtil.GetBreakpointClass(rule.Breakpoint);
             if (bp.Length != 0)
                 cls = InsertBreakpoint(cls, bp);
 

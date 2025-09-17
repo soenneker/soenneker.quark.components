@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
-using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.Flex;
 
@@ -117,11 +117,6 @@ public sealed class FlexBuilder : ICssBuilder
     public FlexBuilder OnPhone => ChainWithBreakpoint(Breakpoint.Phone);
 
     /// <summary>
-    /// Apply on mobile devices (landscape phones, 576px and up).
-    /// </summary>
-    public FlexBuilder OnMobile => ChainWithBreakpoint(Breakpoint.Mobile);
-
-    /// <summary>
     /// Apply on tablet devices (tablets, 768px and up).
     /// </summary>
     public FlexBuilder OnTablet => ChainWithBreakpoint(Breakpoint.Tablet);
@@ -139,7 +134,9 @@ public sealed class FlexBuilder : ICssBuilder
     /// <summary>
     /// Apply on wide screen devices (larger desktops, 1400px and up).
     /// </summary>
-    public FlexBuilder OnWideScreen => ChainWithBreakpoint(Breakpoint.ExtraExtraLarge);
+    public FlexBuilder OnWidescreen => ChainWithBreakpoint(Breakpoint.Widescreen);
+
+    public FlexBuilder OnUltrawide => ChainWithBreakpoint(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private FlexBuilder ChainWithRule(string property, string value)
@@ -181,7 +178,7 @@ public sealed class FlexBuilder : ICssBuilder
             if (cls.Length == 0)
                 continue;
 
-            string bp = BreakpointUtilities.GetBreakpointClass(rule.Breakpoint);
+            string bp = BreakpointUtil.GetBreakpointClass(rule.Breakpoint);
             if (bp.Length != 0)
                 cls = InsertBreakpoint(cls, bp);
 

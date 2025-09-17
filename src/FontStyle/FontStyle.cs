@@ -4,8 +4,8 @@ namespace Soenneker.Quark.Components.FontStyle;
 
 public static class FontStyle
 {
-    public static FontStyleBuilder Italic => new("italic");
-    public static FontStyleBuilder Normal => new("normal");
+    public static FontStyleBuilder Italic => new(Soenneker.Quark.Enums.FontStyles.FontStyle.ItalicValue);
+    public static FontStyleBuilder Normal => new(Soenneker.Quark.Enums.FontStyles.FontStyle.NormalValue);
     public static FontStyleBuilder Inherit => new(GlobalKeyword.InheritValue);
     public static FontStyleBuilder Initial => new(GlobalKeyword.InitialValue);
     public static FontStyleBuilder Revert => new(GlobalKeyword.RevertValue);

@@ -6,4 +6,4 @@ namespace Soenneker.Quark.Components.Border;
 /// <summary>
 /// Represents a single border rule with optional breakpoint.
 /// </summary>
-internal record BorderRule(int Size, ElementSide Side, Breakpoint? Breakpoint = null);
+internal record BorderRule(string Size, ElementSide Side, Breakpoint? Breakpoint = null);

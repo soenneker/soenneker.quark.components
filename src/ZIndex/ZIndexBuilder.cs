@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
-using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.ZIndex;
 
@@ -36,11 +36,11 @@ public sealed class ZIndexBuilder : ICssBuilder
     public ZIndexBuilder Z3 => Chain(3);
 
     public ZIndexBuilder OnPhone => ChainBp(Breakpoint.Phone);
-    public ZIndexBuilder OnMobile => ChainBp(Breakpoint.Mobile);
     public ZIndexBuilder OnTablet => ChainBp(Breakpoint.Tablet);
     public ZIndexBuilder OnLaptop => ChainBp(Breakpoint.Laptop);
     public ZIndexBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
-    public ZIndexBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
+    public ZIndexBuilder OnWidescreen => ChainBp(Breakpoint.Widescreen);
+    public ZIndexBuilder OnUltrawide => ChainBp(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ZIndexBuilder Chain(int value)
@@ -85,7 +85,7 @@ public sealed class ZIndexBuilder : ICssBuilder
             if (cls.Length == 0)
                 continue;
 
-            string bp = BreakpointUtilities.GetBreakpointToken(rule.Breakpoint);
+            string bp = BreakpointUtil.GetBreakpointToken(rule.Breakpoint);
             if (bp.Length != 0)
                 cls = InsertBreakpoint(cls, bp);
 

@@ -2,9 +2,10 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
 using Soenneker.Quark.Enums.ElementSides;
-using Soenneker.Quark.Components.Utilities;
+using Soenneker.Quark.Enums.Scales;
 
 namespace Soenneker.Quark.Components.Padding;
 
@@ -20,11 +21,6 @@ public sealed class PaddingBuilder : ICssBuilder
 
     // ----- Size tokens -----
     private const string _token0 = "0";
-    private const string _token1 = "1";
-    private const string _token2 = "2";
-    private const string _token3 = "3";
-    private const string _token4 = "4";
-    private const string _token5 = "5";
     private const string _tokenAuto = "auto";
 
     // ----- Side tokens (Bootstrap naming) -----
@@ -61,19 +57,19 @@ public sealed class PaddingBuilder : ICssBuilder
 
     // ----- Size chaining -----
     public PaddingBuilder S0 => ChainWithSize(0);
-    public PaddingBuilder S1 => ChainWithSize(1);
-    public PaddingBuilder S2 => ChainWithSize(2);
-    public PaddingBuilder S3 => ChainWithSize(3);
-    public PaddingBuilder S4 => ChainWithSize(4);
-    public PaddingBuilder S5 => ChainWithSize(5);
+    public PaddingBuilder S1 => ChainWithSize(Scale.S1);
+    public PaddingBuilder S2 => ChainWithSize(Scale.S2);
+    public PaddingBuilder S3 => ChainWithSize(Scale.S3);
+    public PaddingBuilder S4 => ChainWithSize(Scale.S4);
+    public PaddingBuilder S5 => ChainWithSize(Scale.S5);
 
     // ----- Breakpoint chaining -----
     public PaddingBuilder OnPhone => ChainWithBreakpoint(Breakpoint.Phone);
-    public PaddingBuilder OnMobile => ChainWithBreakpoint(Breakpoint.Mobile);
     public PaddingBuilder OnTablet => ChainWithBreakpoint(Breakpoint.Tablet);
     public PaddingBuilder OnLaptop => ChainWithBreakpoint(Breakpoint.Laptop);
     public PaddingBuilder OnDesktop => ChainWithBreakpoint(Breakpoint.Desktop);
-    public PaddingBuilder OnWideScreen => ChainWithBreakpoint(Breakpoint.ExtraExtraLarge);
+    public PaddingBuilder OnWidescreen => ChainWithBreakpoint(Breakpoint.Widescreen);
+    public PaddingBuilder OnUltrawide => ChainWithBreakpoint(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private PaddingBuilder AddRule(ElementSide side)
@@ -98,6 +94,14 @@ public sealed class PaddingBuilder : ICssBuilder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private PaddingBuilder ChainWithSize(int size)
     {
+        _rules.Add(new PaddingRule(size, ElementSide.All, null));
+        return this;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private PaddingBuilder ChainWithSize(Scale scale)
+    {
+        int size = int.Parse(scale.Value);
         _rules.Add(new PaddingRule(size, ElementSide.All, null));
         return this;
     }
@@ -135,7 +139,7 @@ public sealed class PaddingBuilder : ICssBuilder
                 continue;
 
             string sideTok = GetSideToken(rule.Side); // "", "t", "e", "b", "s", "x", "y"
-            string bpTok = BreakpointUtilities.GetBreakpointToken(rule.Breakpoint); // "", "sm", "md", ...
+            string bpTok = BreakpointUtil.GetBreakpointToken(rule.Breakpoint); // "", "sm", "md", ...
 
             if (!first) sb.Append(' ');
             else first = false;
@@ -251,11 +255,11 @@ public sealed class PaddingBuilder : ICssBuilder
         return size switch
         {
             0 => _token0,
-            1 => _token1,
-            2 => _token2,
-            3 => _token3,
-            4 => _token4,
-            5 => _token5,
+            1 => Scale.S1Value,
+            2 => Scale.S2Value,
+            3 => Scale.S3Value,
+            4 => Scale.S4Value,
+            5 => Scale.S5Value,
             -1 => _tokenAuto, // "auto"
             _ => string.Empty
         };

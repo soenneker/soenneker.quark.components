@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Quark.Components.Abstract;
-using Soenneker.Quark.Components.Utilities;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
 using Soenneker.Quark.Enums.Size;
 using Soenneker.Utils.PooledStringBuilders;
@@ -36,11 +36,11 @@ public sealed class BoxShadowBuilder : ICssBuilder
     public BoxShadowBuilder Lg => Chain(Size.Large.Value);
 
     public BoxShadowBuilder OnPhone => ChainBp(Breakpoint.Phone);
-    public BoxShadowBuilder OnMobile => ChainBp(Breakpoint.Mobile);
     public BoxShadowBuilder OnTablet => ChainBp(Breakpoint.Tablet);
     public BoxShadowBuilder OnLaptop => ChainBp(Breakpoint.Laptop);
     public BoxShadowBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
-    public BoxShadowBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
+    public BoxShadowBuilder OnWidescreen => ChainBp(Breakpoint.Widescreen);
+    public BoxShadowBuilder OnUltrawide => ChainBp(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private BoxShadowBuilder Chain(string value)
@@ -89,7 +89,7 @@ public sealed class BoxShadowBuilder : ICssBuilder
             if (baseClass.Length == 0)
                 continue;
 
-            string bp = BreakpointUtilities.GetBreakpointToken(rule.Breakpoint);
+            string bp = BreakpointUtil.GetBreakpointToken(rule.Breakpoint);
             if (bp.Length != 0)
                 baseClass = InsertBreakpoint(baseClass, bp);
 

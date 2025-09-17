@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
-using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.Width;
 
@@ -40,11 +40,11 @@ public sealed class WidthBuilder : ICssBuilder
     public WidthBuilder Auto => ChainWithSize("auto");
 
     public WidthBuilder OnPhone => ChainWithBreakpoint(Breakpoint.Phone);
-    public WidthBuilder OnMobile => ChainWithBreakpoint(Breakpoint.Mobile);
     public WidthBuilder OnTablet => ChainWithBreakpoint(Breakpoint.Tablet);
     public WidthBuilder OnLaptop => ChainWithBreakpoint(Breakpoint.Laptop);
     public WidthBuilder OnDesktop => ChainWithBreakpoint(Breakpoint.Desktop);
-    public WidthBuilder OnWideScreen => ChainWithBreakpoint(Breakpoint.ExtraExtraLarge);
+    public WidthBuilder OnWidescreen => ChainWithBreakpoint(Breakpoint.Widescreen);
+    public WidthBuilder OnUltrawide => ChainWithBreakpoint(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private WidthBuilder ChainWithSize(string size)
@@ -83,7 +83,7 @@ public sealed class WidthBuilder : ICssBuilder
             if (cls.Length == 0)
                 continue;
 
-            string bp = BreakpointUtilities.GetBreakpointClass(rule.Breakpoint);
+            string bp = BreakpointUtil.GetBreakpointClass(rule.Breakpoint);
             if (bp.Length != 0)
                 cls = InsertBreakpoint(cls, bp);
 

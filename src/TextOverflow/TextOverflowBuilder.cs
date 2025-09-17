@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
 using Soenneker.Quark.Enums.GlobalKeywords;
-using Soenneker.Quark.Components.Utilities;
 using TextOverflowEnum = Soenneker.Quark.Enums.TextOverflows.TextOverflow;
 
 namespace Soenneker.Quark.Components.TextOverflow;
@@ -47,11 +47,11 @@ public sealed class TextOverflowBuilder : ICssBuilder
 
     // ----- Breakpoint chaining -----
     public TextOverflowBuilder OnPhone => ChainBp(Breakpoint.Phone);
-    public TextOverflowBuilder OnMobile => ChainBp(Breakpoint.Mobile);
     public TextOverflowBuilder OnTablet => ChainBp(Breakpoint.Tablet);
     public TextOverflowBuilder OnLaptop => ChainBp(Breakpoint.Laptop);
     public TextOverflowBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
-    public TextOverflowBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
+    public TextOverflowBuilder OnWidescreen => ChainBp(Breakpoint.Widescreen);
+    public TextOverflowBuilder OnUltrawide => ChainBp(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private TextOverflowBuilder Chain(TextOverflowEnum value)
@@ -105,7 +105,7 @@ public sealed class TextOverflowBuilder : ICssBuilder
             if (baseClass.Length == 0)
                 continue;
 
-            string bp = BreakpointUtilities.GetBreakpointClass(rule.Breakpoint);
+            string bp = BreakpointUtil.GetBreakpointClass(rule.Breakpoint);
             if (bp.Length != 0)
                 baseClass = InsertBreakpoint(baseClass, bp);
 

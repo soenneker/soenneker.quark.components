@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
+using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
-using Soenneker.Quark.Components.Utilities;
 
 namespace Soenneker.Quark.Components.UserSelect;
 
@@ -38,11 +38,11 @@ public sealed class UserSelectBuilder : ICssBuilder
     public UserSelectBuilder Unset => Chain(Enums.GlobalKeywords.GlobalKeyword.UnsetValue);
 
     public UserSelectBuilder OnPhone => ChainBp(Breakpoint.Phone);
-    public UserSelectBuilder OnMobile => ChainBp(Breakpoint.Mobile);
     public UserSelectBuilder OnTablet => ChainBp(Breakpoint.Tablet);
     public UserSelectBuilder OnLaptop => ChainBp(Breakpoint.Laptop);
     public UserSelectBuilder OnDesktop => ChainBp(Breakpoint.Desktop);
-    public UserSelectBuilder OnWideScreen => ChainBp(Breakpoint.ExtraExtraLarge);
+    public UserSelectBuilder OnWidescreen => ChainBp(Breakpoint.Widescreen);
+    public UserSelectBuilder OnUltrawide => ChainBp(Breakpoint.Ultrawide);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private UserSelectBuilder Chain(string value)
@@ -85,7 +85,7 @@ public sealed class UserSelectBuilder : ICssBuilder
             if (cls.Length == 0)
                 continue;
 
-            string bp = BreakpointUtilities.GetBreakpointToken(rule.Breakpoint);
+            string bp = BreakpointUtil.GetBreakpointToken(rule.Breakpoint);
             if (bp.Length != 0)
                 cls = InsertBreakpoint(cls, bp);
 
