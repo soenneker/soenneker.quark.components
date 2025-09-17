@@ -5,6 +5,7 @@ using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
 using Soenneker.Quark.Enums.ElementSides;
+using Soenneker.Quark.Enums.Scales;
 
 namespace Soenneker.Quark.Components.Border;
 
@@ -33,10 +34,10 @@ public sealed class BorderBuilder : ICssBuilder
     private const string _sideX = "x";
     private const string _sideY = "y";
 
-    internal BorderBuilder(int size, Breakpoint? breakpoint = null)
+    internal BorderBuilder(string size, Breakpoint? breakpoint = null)
     {
-        if (size >= 0)
-            _rules.Add(new BorderRule(size.ToString(), ElementSide.All, breakpoint));
+        if (!string.IsNullOrEmpty(size))
+            _rules.Add(new BorderRule(size, ElementSide.All, breakpoint));
     }
 
     internal BorderBuilder(List<BorderRule> rules)
@@ -57,12 +58,12 @@ public sealed class BorderBuilder : ICssBuilder
     public BorderBuilder FromEnd => AddRule(ElementSide.InlineEnd);
 
     // ----- Size chaining -----
-    public BorderBuilder S0 => ChainWithSize(0);
-    public BorderBuilder S1 => ChainWithSize(1);
-    public BorderBuilder S2 => ChainWithSize(2);
-    public BorderBuilder S3 => ChainWithSize(3);
-    public BorderBuilder S4 => ChainWithSize(4);
-    public BorderBuilder S5 => ChainWithSize(5);
+    public BorderBuilder S0 => ChainWithSize(Scale.S0);
+    public BorderBuilder S1 => ChainWithSize(Scale.S1);
+    public BorderBuilder S2 => ChainWithSize(Scale.S2);
+    public BorderBuilder S3 => ChainWithSize(Scale.S3);
+    public BorderBuilder S4 => ChainWithSize(Scale.S4);
+    public BorderBuilder S5 => ChainWithSize(Scale.S5);
 
     // ----- Breakpoint chaining -----
     public BorderBuilder OnPhone => ChainWithBreakpoint(Breakpoint.Phone);
@@ -91,9 +92,9 @@ public sealed class BorderBuilder : ICssBuilder
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private BorderBuilder ChainWithSize(int size)
+    private BorderBuilder ChainWithSize(Scale scale)
     {
-        _rules.Add(new BorderRule(size.ToString(), ElementSide.All, null));
+        _rules.Add(new BorderRule(scale.Value, ElementSide.All, null));
         return this;
     }
 

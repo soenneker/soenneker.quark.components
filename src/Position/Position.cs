@@ -10,27 +10,27 @@ public static class Position
     /// <summary>
     /// Static positioning.
     /// </summary>
-    public static PositionBuilder Static => new("static");
+    public static PositionBuilder Static => new(Enums.Positions.Position.StaticValue);
 
     /// <summary>
     /// Relative positioning.
     /// </summary>
-    public static PositionBuilder Relative => new("relative");
+    public static PositionBuilder Relative => new(Enums.Positions.Position.RelativeValue);
 
     /// <summary>
     /// Absolute positioning.
     /// </summary>
-    public static PositionBuilder Absolute => new("absolute");
+    public static PositionBuilder Absolute => new(Enums.Positions.Position.AbsoluteValue);
 
     /// <summary>
     /// Fixed positioning.
     /// </summary>
-    public static PositionBuilder Fixed => new("fixed");
+    public static PositionBuilder Fixed => new(Enums.Positions.Position.FixedValue);
 
     /// <summary>
     /// Sticky positioning.
     /// </summary>
-    public static PositionBuilder Sticky => new("sticky");
+    public static PositionBuilder Sticky => new(Enums.Positions.Position.StickyValue);
 
     public static PositionBuilder Inherit => new(GlobalKeyword.InheritValue);
     public static PositionBuilder Initial => new(GlobalKeyword.InitialValue);

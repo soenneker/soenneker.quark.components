@@ -31,11 +31,9 @@ public sealed class PaddingBuilder : ICssBuilder
     private const string _sideX = "x";
     private const string _sideY = "y";
 
-    internal PaddingBuilder(int size, Breakpoint? breakpoint = null)
+    internal PaddingBuilder(string size, Breakpoint? breakpoint = null)
     {
-        // negative size = auto (kept for parity with your original)
-        int normalized = size >= 0 ? size : -1;
-        _rules.Add(new PaddingRule(normalized, ElementSide.All, breakpoint));
+        _rules.Add(new PaddingRule(size, ElementSide.All, breakpoint));
     }
 
     internal PaddingBuilder(List<PaddingRule> rules)
@@ -56,7 +54,7 @@ public sealed class PaddingBuilder : ICssBuilder
     public PaddingBuilder FromEnd => AddRule(ElementSide.InlineEnd);
 
     // ----- Size chaining -----
-    public PaddingBuilder S0 => ChainWithSize(0);
+    public PaddingBuilder S0 => ChainWithSize(Scale.S0);
     public PaddingBuilder S1 => ChainWithSize(Scale.S1);
     public PaddingBuilder S2 => ChainWithSize(Scale.S2);
     public PaddingBuilder S3 => ChainWithSize(Scale.S3);
@@ -74,8 +72,8 @@ public sealed class PaddingBuilder : ICssBuilder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private PaddingBuilder AddRule(ElementSide side)
     {
-        // Use last size & breakpoint if present; default to 0 when absent
-        int size = _rules.Count > 0 ? _rules[^1].Size : 0;
+        // Use last size & breakpoint if present; default to "0" when absent
+        string size = _rules.Count > 0 ? _rules[^1].Size : "0";
         Breakpoint? bp = _rules.Count > 0 ? _rules[^1].Breakpoint : null;
 
         if (_rules.Count > 0 && _rules[^1].Side == ElementSide.All)
@@ -92,7 +90,7 @@ public sealed class PaddingBuilder : ICssBuilder
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private PaddingBuilder ChainWithSize(int size)
+    private PaddingBuilder ChainWithSize(string size)
     {
         _rules.Add(new PaddingRule(size, ElementSide.All, null));
         return this;
@@ -101,8 +99,7 @@ public sealed class PaddingBuilder : ICssBuilder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private PaddingBuilder ChainWithSize(Scale scale)
     {
-        int size = int.Parse(scale.Value);
-        _rules.Add(new PaddingRule(size, ElementSide.All, null));
+        _rules.Add(new PaddingRule(scale.Value, ElementSide.All, null));
         return this;
     }
 
@@ -111,7 +108,7 @@ public sealed class PaddingBuilder : ICssBuilder
     {
         if (_rules.Count == 0)
         {
-            _rules.Add(new PaddingRule(0, ElementSide.All, breakpoint));
+            _rules.Add(new PaddingRule("0", ElementSide.All, breakpoint));
             return this;
         }
 
@@ -250,17 +247,17 @@ public sealed class PaddingBuilder : ICssBuilder
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static string GetSizeToken(int size)
+    private static string GetSizeToken(string size)
     {
         return size switch
         {
-            0 => _token0,
-            1 => Scale.S1Value,
-            2 => Scale.S2Value,
-            3 => Scale.S3Value,
-            4 => Scale.S4Value,
-            5 => Scale.S5Value,
-            -1 => _tokenAuto, // "auto"
+            "0" => _token0,
+            "1" => Scale.S1Value,
+            "2" => Scale.S2Value,
+            "3" => Scale.S3Value,
+            "4" => Scale.S4Value,
+            "5" => Scale.S5Value,
+            "-1" => _tokenAuto, // "auto"
             _ => string.Empty
         };
     }
@@ -296,18 +293,18 @@ public sealed class PaddingBuilder : ICssBuilder
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static string? GetSizeValue(int size)
+    private static string? GetSizeValue(string size)
     {
         // Match your original rem scale and "auto"
         return size switch
         {
-            0 => "0",
-            1 => "0.25rem",
-            2 => "0.5rem",
-            3 => "1rem",
-            4 => "1.5rem",
-            5 => "3rem",
-            -1 => "auto",
+            "0" => "0",
+            "1" => "0.25rem",
+            "2" => "0.5rem",
+            "3" => "1rem",
+            "4" => "1.5rem",
+            "5" => "3rem",
+            "-1" => "auto",
             _ => null
         };
     }

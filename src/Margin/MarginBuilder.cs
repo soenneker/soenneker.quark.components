@@ -21,6 +21,11 @@ public sealed class MarginBuilder : ICssBuilder
 
     // ----- Size tokens -----
     private const string _token0 = "0";
+    private const string _token1 = "1";
+    private const string _token2 = "2";
+    private const string _token3 = "3";
+    private const string _token4 = "4";
+    private const string _token5 = "5";
     private const string _tokenAuto = "auto";
 
     // ----- Side tokens (Bootstrap naming) -----
@@ -31,10 +36,9 @@ public sealed class MarginBuilder : ICssBuilder
     private const string _sideX = "x";
     private const string _sideY = "y";
 
-    internal MarginBuilder(int size, Breakpoint? breakpoint = null)
+    internal MarginBuilder(string size, Breakpoint? breakpoint = null)
     {
-        int normalized = size >= 0 ? size : -1; // -1 represents auto
-        _rules.Add(new MarginRule(normalized, ElementSide.All, breakpoint));
+        _rules.Add(new MarginRule(size, ElementSide.All, breakpoint));
     }
 
     internal MarginBuilder(List<MarginRule> rules)
@@ -55,13 +59,13 @@ public sealed class MarginBuilder : ICssBuilder
     public MarginBuilder FromEnd => AddRule(ElementSide.InlineEnd);
 
     // ----- Size chaining -----
-    public MarginBuilder S0 => ChainWithSize(0);
+    public MarginBuilder S0 => ChainWithSize(Scale.S0);
     public MarginBuilder S1 => ChainWithSize(Scale.S1);
     public MarginBuilder S2 => ChainWithSize(Scale.S2);
     public MarginBuilder S3 => ChainWithSize(Scale.S3);
     public MarginBuilder S4 => ChainWithSize(Scale.S4);
     public MarginBuilder S5 => ChainWithSize(Scale.S5);
-    public MarginBuilder Auto => ChainWithSize(-1);
+    public MarginBuilder Auto => ChainWithSize("auto");
 
     // ----- Breakpoint chaining -----
     public MarginBuilder OnPhone => ChainWithBreakpoint(Breakpoint.Phone);
@@ -74,7 +78,7 @@ public sealed class MarginBuilder : ICssBuilder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private MarginBuilder AddRule(ElementSide side)
     {
-        int size = _rules.Count > 0 ? _rules[^1].Size : 0;
+        string size = _rules.Count > 0 ? _rules[^1].Size : "0";
         Breakpoint? bp = _rules.Count > 0 ? _rules[^1].Breakpoint : null;
 
         if (_rules.Count > 0 && _rules[^1].Side == ElementSide.All)
@@ -90,7 +94,7 @@ public sealed class MarginBuilder : ICssBuilder
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private MarginBuilder ChainWithSize(int size)
+    private MarginBuilder ChainWithSize(string size)
     {
         _rules.Add(new MarginRule(size, ElementSide.All, null));
         return this;
@@ -99,8 +103,7 @@ public sealed class MarginBuilder : ICssBuilder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private MarginBuilder ChainWithSize(Scale scale)
     {
-        int size = int.Parse(scale.Value);
-        _rules.Add(new MarginRule(size, ElementSide.All, null));
+        _rules.Add(new MarginRule(scale.Value, ElementSide.All, null));
         return this;
     }
 
@@ -109,7 +112,7 @@ public sealed class MarginBuilder : ICssBuilder
     {
         if (_rules.Count == 0)
         {
-            _rules.Add(new MarginRule(0, ElementSide.All, breakpoint));
+            _rules.Add(new MarginRule("0", ElementSide.All, breakpoint));
             return this;
         }
 
@@ -249,17 +252,17 @@ public sealed class MarginBuilder : ICssBuilder
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static string GetSizeToken(int size)
+        private static string GetSizeToken(string size)
         {
             return size switch
             {
-                0 => _token0,
-                1 => Scale.S1Value,
-                2 => Scale.S2Value,
-                3 => Scale.S3Value,
-                4 => Scale.S4Value,
-                5 => Scale.S5Value,
-                -1 => _tokenAuto,
+                "0" => _token0,
+                "1" => _token1,
+                "2" => _token2,
+                "3" => _token3,
+                "4" => _token4,
+                "5" => _token5,
+                "auto" => _tokenAuto,
                 _ => string.Empty
             };
         }
@@ -295,17 +298,17 @@ public sealed class MarginBuilder : ICssBuilder
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static string? GetSizeValue(int size)
+        private static string? GetSizeValue(string size)
         {
             return size switch
             {
-                0 => "0",
-                1 => "0.25rem",
-                2 => "0.5rem",
-                3 => "1rem",
-                4 => "1.5rem",
-                5 => "3rem",
-                -1 => "auto",
+                "0" => "0",
+                "1" => "0.25rem",
+                "2" => "0.5rem",
+                "3" => "1rem",
+                "4" => "1.5rem",
+                "5" => "3rem",
+                "auto" => "auto",
                 _ => null
             };
         }

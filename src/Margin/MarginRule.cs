@@ -6,4 +6,4 @@ namespace Soenneker.Quark.Components.Margin;
 /// <summary>
 /// Represents a single margin rule with optional breakpoint.
 /// </summary>
-internal record MarginRule(int Size, ElementSide Side, Breakpoint? Breakpoint = null);
+internal record MarginRule(string Size, ElementSide Side, Breakpoint? Breakpoint = null);

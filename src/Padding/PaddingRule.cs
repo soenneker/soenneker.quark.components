@@ -6,4 +6,4 @@ namespace Soenneker.Quark.Components.Padding;
 /// <summary>
 /// Represents a single padding rule with optional breakpoint.
 /// </summary>
-internal record PaddingRule(int Size, ElementSide Side, Breakpoint? Breakpoint = null);
+internal record PaddingRule(string Size, ElementSide Side, Breakpoint? Breakpoint = null);
