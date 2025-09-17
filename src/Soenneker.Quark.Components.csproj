@@ -68,6 +68,5 @@
         <PackageReference Include="Soenneker.Quark.Enums.VerticalAligns" Version="3.0.2" />
         <PackageReference Include="Soenneker.Quark.Enums.Visibilities" Version="3.0.2" />
         <PackageReference Include="Soenneker.Utils.AtomicBool" Version="3.0.9" />
-        <PackageReference Include="Soenneker.Utils.PooledStringBuilders" Version="3.0.4" />
     </ItemGroup>
 </Project>
