@@ -50,7 +50,7 @@ public abstract class Component : ComponentBase, Abstract.IComponent
     protected readonly AtomicBool AsyncDisposed = new();
 
     [Parameter]
-    public string? Id { get; set; }
+    public virtual string? Id { get; set; }
 
     [Parameter]
     public string? Class { get; set; }

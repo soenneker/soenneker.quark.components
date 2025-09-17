@@ -73,11 +73,20 @@ public interface IComponent : IDisposable, IAsyncDisposable
     /// </summary>
     CssValue<BoxShadowBuilder>? BoxShadow { get; set; }
 
+    /// <summary>
+    /// 
+    /// </summary>
     CssValue<FloatBuilder>? Float { get; set; }
 
+    /// <summary>
+    /// 
+    /// </summary>
     CssValue<DisplayBuilder>? Display { get; set; }
 
 
+    /// <summary>
+    /// 
+    /// </summary>
     CssValue<VisibilityBuilder>? Visibility { get; set; }
 
     /// <summary>
