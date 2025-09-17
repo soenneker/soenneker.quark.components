@@ -5,7 +5,6 @@ using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
-using Soenneker.Quark.Enums.Size;
 
 namespace Soenneker.Quark.Components.PointerEvents;
 

@@ -19,13 +19,6 @@ public sealed class BorderBuilder : ICssBuilder
     // ----- Class tokens -----
     private const string _baseToken = "b";
 
-    // ----- Size tokens -----
-    private const string _token0 = "0";
-    private const string _token2 = "2";
-    private const string _token3 = "3";
-    private const string _token4 = "4";
-    private const string _token5 = "5";
-
     // ----- Side tokens -----
     private const string _sideT = "t";
     private const string _sideE = "e";
@@ -173,6 +166,7 @@ public sealed class BorderBuilder : ICssBuilder
             {
                 BorderRule rule = _rules[i];
                 string? sizeVal = GetSizeValue(rule.Size);
+
                 if (sizeVal is null)
                     continue;
 
@@ -235,8 +229,10 @@ public sealed class BorderBuilder : ICssBuilder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void AppendStyle(ref bool first, ref PooledStringBuilder sb, string prop, string val)
     {
-        if (!first) sb.Append("; ");
-        else first = false;
+        if (!first) 
+            sb.Append("; ");
+        else 
+            first = false;
 
         sb.Append(prop);
         sb.Append(": ");
@@ -278,12 +274,12 @@ public sealed class BorderBuilder : ICssBuilder
     {
         return size switch
         {
-            "0" => "0",
-            "1" => "1px",
-            "2" => "2px",
-            "3" => "3px",
-            "4" => "4px",
-            "5" => "5px",
+            Scale.S0Value => "0",
+            Scale.S1Value => "1px",
+            Scale.S2Value => "2px",
+            Scale.S3Value => "3px",
+            Scale.S4Value => "4px",
+            Scale.S5Value => "5px",
             _ => null
         };
     }

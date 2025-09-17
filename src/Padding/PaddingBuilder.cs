@@ -72,8 +72,8 @@ public sealed class PaddingBuilder : ICssBuilder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private PaddingBuilder AddRule(ElementSide side)
     {
-        // Use last size & breakpoint if present; default to "0" when absent
-        string size = _rules.Count > 0 ? _rules[^1].Size : "0";
+        // Use last size & breakpoint if present; default to Scale.S0Value when absent
+        string size = _rules.Count > 0 ? _rules[^1].Size : Scale.S0Value;
         Breakpoint? bp = _rules.Count > 0 ? _rules[^1].Breakpoint : null;
 
         if (_rules.Count > 0 && _rules[^1].Side == ElementSide.All)
@@ -108,7 +108,7 @@ public sealed class PaddingBuilder : ICssBuilder
     {
         if (_rules.Count == 0)
         {
-            _rules.Add(new PaddingRule("0", ElementSide.All, breakpoint));
+            _rules.Add(new PaddingRule(Scale.S0Value, ElementSide.All, breakpoint));
             return this;
         }
 
@@ -251,12 +251,12 @@ public sealed class PaddingBuilder : ICssBuilder
     {
         return size switch
         {
-            "0" => _token0,
-            "1" => Scale.S1Value,
-            "2" => Scale.S2Value,
-            "3" => Scale.S3Value,
-            "4" => Scale.S4Value,
-            "5" => Scale.S5Value,
+            Scale.S0Value => _token0,
+            Scale.S1Value => Scale.S1Value,
+            Scale.S2Value => Scale.S2Value,
+            Scale.S3Value => Scale.S3Value,
+            Scale.S4Value => Scale.S4Value,
+            Scale.S5Value => Scale.S5Value,
             "-1" => _tokenAuto, // "auto"
             _ => string.Empty
         };
@@ -298,12 +298,12 @@ public sealed class PaddingBuilder : ICssBuilder
         // Match your original rem scale and "auto"
         return size switch
         {
-            "0" => "0",
-            "1" => "0.25rem",
-            "2" => "0.5rem",
-            "3" => "1rem",
-            "4" => "1.5rem",
-            "5" => "3rem",
+            Scale.S0Value => "0",
+            Scale.S1Value => "0.25rem",
+            Scale.S2Value => "0.5rem",
+            Scale.S3Value => "1rem",
+            Scale.S4Value => "1.5rem",
+            Scale.S5Value => "3rem",
             "-1" => "auto",
             _ => null
         };

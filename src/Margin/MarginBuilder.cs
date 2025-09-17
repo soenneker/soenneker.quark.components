@@ -78,7 +78,7 @@ public sealed class MarginBuilder : ICssBuilder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private MarginBuilder AddRule(ElementSide side)
     {
-        string size = _rules.Count > 0 ? _rules[^1].Size : "0";
+        string size = _rules.Count > 0 ? _rules[^1].Size : Scale.S0Value;
         Breakpoint? bp = _rules.Count > 0 ? _rules[^1].Breakpoint : null;
 
         if (_rules.Count > 0 && _rules[^1].Side == ElementSide.All)
@@ -112,7 +112,7 @@ public sealed class MarginBuilder : ICssBuilder
     {
         if (_rules.Count == 0)
         {
-            _rules.Add(new MarginRule("0", ElementSide.All, breakpoint));
+            _rules.Add(new MarginRule(Scale.S0Value, ElementSide.All, breakpoint));
             return this;
         }
 
@@ -256,12 +256,12 @@ public sealed class MarginBuilder : ICssBuilder
         {
             return size switch
             {
-                "0" => _token0,
-                "1" => _token1,
-                "2" => _token2,
-                "3" => _token3,
-                "4" => _token4,
-                "5" => _token5,
+                Scale.S0Value => _token0,
+                Scale.S1Value => _token1,
+                Scale.S2Value => _token2,
+                Scale.S3Value => _token3,
+                Scale.S4Value => _token4,
+                Scale.S5Value => _token5,
                 "auto" => _tokenAuto,
                 _ => string.Empty
             };
@@ -302,12 +302,12 @@ public sealed class MarginBuilder : ICssBuilder
         {
             return size switch
             {
-                "0" => "0",
-                "1" => "0.25rem",
-                "2" => "0.5rem",
-                "3" => "1rem",
-                "4" => "1.5rem",
-                "5" => "3rem",
+                Scale.S0Value => "0",
+                Scale.S1Value => "0.25rem",
+                Scale.S2Value => "0.5rem",
+                Scale.S3Value => "1rem",
+                Scale.S4Value => "1.5rem",
+                Scale.S5Value => "3rem",
                 "auto" => "auto",
                 _ => null
             };

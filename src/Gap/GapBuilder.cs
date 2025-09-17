@@ -5,6 +5,7 @@ using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Abstract;
 using Soenneker.Quark.Components.Utils;
 using Soenneker.Quark.Enums.Breakpoints;
+using Soenneker.Quark.Enums.Scales;
 
 namespace Soenneker.Quark.Components.Gap;
 
@@ -38,32 +39,32 @@ public sealed class GapBuilder : ICssBuilder
     /// <summary>
     /// Chain with a new size for the next rule.
     /// </summary>
-    public GapBuilder S0 => ChainWithSize("0");
+    public GapBuilder S0 => ChainWithSize(Scale.S0Value);
 
     /// <summary>
     /// Chain with a new size for the next rule.
     /// </summary>
-    public GapBuilder S1 => ChainWithSize("1");
+    public GapBuilder S1 => ChainWithSize(Scale.S1Value);
 
     /// <summary>
     /// Chain with a new size for the next rule.
     /// </summary>
-    public GapBuilder S2 => ChainWithSize("2");
+    public GapBuilder S2 => ChainWithSize(Scale.S2Value);
 
     /// <summary>
     /// Chain with a new size for the next rule.
     /// </summary>
-    public GapBuilder S3 => ChainWithSize("3");
+    public GapBuilder S3 => ChainWithSize(Scale.S3Value);
 
     /// <summary>
     /// Chain with a new size for the next rule.
     /// </summary>
-    public GapBuilder S4 => ChainWithSize("4");
+    public GapBuilder S4 => ChainWithSize(Scale.S4Value);
 
     /// <summary>
     /// Chain with a new size for the next rule.
     /// </summary>
-    public GapBuilder S5 => ChainWithSize("5");
+    public GapBuilder S5 => ChainWithSize(Scale.S5Value);
 
     /// <summary>
     /// Apply on phone devices (portrait phones, less than 576px).
@@ -103,7 +104,7 @@ public sealed class GapBuilder : ICssBuilder
     {
         if (_rules.Count == 0)
         {
-            _rules.Add(new GapRule("0", breakpoint));
+            _rules.Add(new GapRule(Scale.S0Value, breakpoint));
             return this;
         }
 
@@ -132,10 +133,12 @@ public sealed class GapBuilder : ICssBuilder
                 continue;
 
             string bp = BreakpointUtil.GetBreakpointClass(rule.Breakpoint);
+
             if (bp.Length != 0)
                 cls = InsertBreakpoint(cls, bp);
 
-            if (!first) sb.Append(' ');
+            if (!first) 
+                sb.Append(' ');
             else first = false;
 
             sb.Append(cls);
@@ -177,12 +180,12 @@ public sealed class GapBuilder : ICssBuilder
     {
         return size switch
         {
-            "0" => _classGap0,
-            "1" => _classGap1,
-            "2" => _classGap2,
-            "3" => _classGap3,
-            "4" => _classGap4,
-            "5" => _classGap5,
+            Scale.S0Value => _classGap0,
+            Scale.S1Value => _classGap1,
+            Scale.S2Value => _classGap2,
+            Scale.S3Value => _classGap3,
+            Scale.S4Value => _classGap4,
+            Scale.S5Value => _classGap5,
             _ => string.Empty
         };
     }
@@ -192,12 +195,12 @@ public sealed class GapBuilder : ICssBuilder
     {
         return size switch
         {
-            "0" => "0",
-            "1" => "0.25rem",
-            "2" => "0.5rem",
-            "3" => "1rem",
-            "4" => "1.5rem",
-            "5" => "3rem",
+            Scale.S0Value => "0",
+            Scale.S1Value => "0.25rem",
+            Scale.S2Value => "0.5rem",
+            Scale.S3Value => "1rem",
+            Scale.S4Value => "1.5rem",
+            Scale.S5Value => "3rem",
             _ => null
         };
     }
