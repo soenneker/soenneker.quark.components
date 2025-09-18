@@ -99,13 +99,13 @@ public readonly struct CssValue<TBuilder> : IEquatable<CssValue<TBuilder>> where
         return _value.GetHashCode();
     }
 
-    public static bool operator ==(CssValue<TBuilder> left, CssValue<TBuilder> right)
+    public static bool operator ==(CssValue<TBuilder> start, CssValue<TBuilder> end)
     {
-        return left.Equals(right);
+        return start.Equals(end);
     }
 
-    public static bool operator !=(CssValue<TBuilder> left, CssValue<TBuilder> right)
+    public static bool operator !=(CssValue<TBuilder> start, CssValue<TBuilder> end)
     {
-        return !left.Equals(right);
+        return !start.Equals(end);
     }
 }
