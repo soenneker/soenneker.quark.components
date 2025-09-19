@@ -6,40 +6,41 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Soenneker.Blazor.Extensions.EventCallback;
 using Soenneker.Extensions.String;
-using Soenneker.Quark.Dtos.Colors;
 using Soenneker.Utils.AtomicBool;
 using Soenneker.Utils.PooledStringBuilders;
-using Soenneker.Quark.Components.Abstract;
-using Soenneker.Quark.Components.Borders;
-using Soenneker.Quark.Components.BoxShadows;
-using Soenneker.Quark.Components.Displays;
-using Soenneker.Quark.Components.Flexes;
-using Soenneker.Quark.Components.Floats;
-using Soenneker.Quark.Components.FontStyles;
-using Soenneker.Quark.Components.FontWeights;
-using Soenneker.Quark.Components.Gaps;
-using Soenneker.Quark.Components.Heights;
-using Soenneker.Quark.Components.LineHeights;
-using Soenneker.Quark.Components.Margins;
-using Soenneker.Quark.Components.ObjectFits;
-using Soenneker.Quark.Components.Opacities;
-using Soenneker.Quark.Components.Overflows;
-using Soenneker.Quark.Components.Paddings;
-using Soenneker.Quark.Components.PointerEventss;
-using Soenneker.Quark.Components.PositionOffsets;
-using Soenneker.Quark.Components.Positions;
-using Soenneker.Quark.Components.TextAlignments;
-using Soenneker.Quark.Components.TextBreaks;
-using Soenneker.Quark.Components.TextSizes;
-using Soenneker.Quark.Components.TextTransforms;
-using Soenneker.Quark.Components.TextWraps;
-using Soenneker.Quark.Components.UserSelects;
-using Soenneker.Quark.Components.VerticalAligns;
-using Soenneker.Quark.Components.Visibilities;
-using Soenneker.Quark.Components.Widths;
-using Soenneker.Quark.Components.ZIndexes;
-using Soenneker.Quark.Components.TextDecorations;
-using Soenneker.Quark.Components.TextOverflows;
+using Soenneker.Quark.Components.Builders;
+using Soenneker.Quark.Components.Builders.Abstract;
+using Soenneker.Quark.Components.Builders.Borders;
+using Soenneker.Quark.Components.Builders.BoxShadows;
+using Soenneker.Quark.Components.Builders.Colors;
+using Soenneker.Quark.Components.Builders.Displays;
+using Soenneker.Quark.Components.Builders.Flexes;
+using Soenneker.Quark.Components.Builders.Floats;
+using Soenneker.Quark.Components.Builders.FontStyles;
+using Soenneker.Quark.Components.Builders.FontWeights;
+using Soenneker.Quark.Components.Builders.Gaps;
+using Soenneker.Quark.Components.Builders.Heights;
+using Soenneker.Quark.Components.Builders.LineHeights;
+using Soenneker.Quark.Components.Builders.Margins;
+using Soenneker.Quark.Components.Builders.ObjectFits;
+using Soenneker.Quark.Components.Builders.Opacities;
+using Soenneker.Quark.Components.Builders.Overflows;
+using Soenneker.Quark.Components.Builders.Paddings;
+using Soenneker.Quark.Components.Builders.PointerEventss;
+using Soenneker.Quark.Components.Builders.PositionOffsets;
+using Soenneker.Quark.Components.Builders.Positions;
+using Soenneker.Quark.Components.Builders.TextAlignments;
+using Soenneker.Quark.Components.Builders.TextBreaks;
+using Soenneker.Quark.Components.Builders.TextDecorations;
+using Soenneker.Quark.Components.Builders.TextOverflows;
+using Soenneker.Quark.Components.Builders.TextSizes;
+using Soenneker.Quark.Components.Builders.TextTransforms;
+using Soenneker.Quark.Components.Builders.TextWraps;
+using Soenneker.Quark.Components.Builders.UserSelects;
+using Soenneker.Quark.Components.Builders.VerticalAligns;
+using Soenneker.Quark.Components.Builders.Visibilities;
+using Soenneker.Quark.Components.Builders.Widths;
+using Soenneker.Quark.Components.Builders.ZIndexes;
 
 namespace Soenneker.Quark.Components;
 
@@ -206,10 +207,13 @@ public abstract class Component : ComponentBase, Abstract.IComponent
     public Dictionary<string, object>? Attributes { get; set; }
 
     [Parameter]
-    public Color TextColor { get; set; }
+    public CssValue<ColorBuilder>? TextColor { get; set; }
 
     [Parameter]
-    public Color BackgroundColor { get; set; }
+    public CssValue<ColorBuilder>? BackgroundColor { get; set; }
+
+    [Parameter]
+    public CssValue<ColorBuilder>? TextBackgroundColor { get; set; }
 
     [Parameter]
     public string? Role { get; set; }
@@ -259,33 +263,10 @@ public abstract class Component : ComponentBase, Abstract.IComponent
             if (AriaLabel.HasContent()) attrs["aria-label"] = AriaLabel!;
             if (AriaDescribedBy.HasContent()) attrs["aria-describedby"] = AriaDescribedBy!;
 
-            {
-                string? textColorClass = TextColor.BuildClass("text");
-                if (textColorClass is not null)
-                    AppendClass(ref cls, textColorClass);
-                else
-                {
-                    string? css = TextColor.CssValueOrNull();
-
-                    if (css.HasContent())
-                        AppendStyleDecl(ref sty, "color: ", css!);
-                }
-            }
-
-            {
-                string? bgClass = BackgroundColor.BuildClass("bg");
-                if (bgClass is not null)
-                    AppendClass(ref cls, bgClass);
-                else
-                {
-                    string? css = BackgroundColor.CssValueOrNull();
-
-                    if (css.HasContent())
-                        AppendStyleDecl(ref sty, "background-color: ", css!);
-                }
-            }
-
             AddCss(ref sty, ref cls, Display);
+            AddColorCss(ref sty, ref cls, TextColor, "text", "color");
+            AddColorCss(ref sty, ref cls, BackgroundColor, "bg", "background-color");
+            AddColorCss(ref sty, ref cls, TextBackgroundColor, "text-bg", "background-color");
             AddCss(ref sty, ref cls, Flex);
             AddCss(ref sty, ref cls, Gap);
             AddCss(ref sty, ref cls, Border);
@@ -489,6 +470,29 @@ public abstract class Component : ComponentBase, Abstract.IComponent
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void AddColorCss(ref PooledStringBuilder styB, ref PooledStringBuilder clsB, CssValue<ColorBuilder>? v, string classPrefix, string cssProperty)
+    {
+        if (v is { IsEmpty: false })
+        {
+            var result = v.Value.ToString();
+
+            if (!result.HasContent())
+                return;
+
+            if (v.Value.IsCssStyle)
+            {
+                // It's a CSS style value, apply the CSS property
+                AppendStyleDecl(ref styB, $"{cssProperty}: {result}");
+            }
+            else
+            {
+                // It's a class value, apply the prefix
+                AppendClass(ref clsB, $"{classPrefix}-{result}");
+            }
+        }
+    }
+
     protected virtual Task HandleClick(MouseEventArgs e) => OnClick.InvokeIfHasDelegate(e);
     protected virtual Task HandleDoubleClick(MouseEventArgs e) => OnDoubleClick.InvokeIfHasDelegate(e);
     protected virtual Task HandleMouseOver(MouseEventArgs e) => OnMouseOver.InvokeIfHasDelegate(e);
@@ -583,13 +587,13 @@ public abstract class Component : ComponentBase, Abstract.IComponent
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected static void AppendStyleDeclAttr(IDictionary<string, object> attrs, string fullDecl)
     {
-        if (string.IsNullOrWhiteSpace(fullDecl))
+        if (fullDecl.IsNullOrWhiteSpace())
             return;
 
         attrs.TryGetValue("style", out object? styleObj);
         var existing = styleObj?.ToString();
 
-        if (string.IsNullOrEmpty(existing))
+        if (existing.IsNullOrEmpty())
         {
             attrs["style"] = fullDecl;
             return;

@@ -1,25 +1,26 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
-using Soenneker.Quark.Dtos.Colors;
+using Soenneker.Quark.Components.Builders;
+using Soenneker.Quark.Components.Builders.BoxShadows;
+using Soenneker.Quark.Components.Builders.Colors;
+using Soenneker.Quark.Components.Builders.Displays;
+using Soenneker.Quark.Components.Builders.Floats;
+using Soenneker.Quark.Components.Builders.Heights;
+using Soenneker.Quark.Components.Builders.Margins;
+using Soenneker.Quark.Components.Builders.ObjectFits;
+using Soenneker.Quark.Components.Builders.Overflows;
+using Soenneker.Quark.Components.Builders.Paddings;
+using Soenneker.Quark.Components.Builders.Positions;
+using Soenneker.Quark.Components.Builders.TextAlignments;
+using Soenneker.Quark.Components.Builders.TextDecorations;
+using Soenneker.Quark.Components.Builders.TextOverflows;
+using Soenneker.Quark.Components.Builders.TextSizes;
+using Soenneker.Quark.Components.Builders.VerticalAligns;
+using Soenneker.Quark.Components.Builders.Visibilities;
+using Soenneker.Quark.Components.Builders.Widths;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Soenneker.Quark.Components.BoxShadows;
-using Soenneker.Quark.Components.Displays;
-using Soenneker.Quark.Components.Floats;
-using Soenneker.Quark.Components.Heights;
-using Soenneker.Quark.Components.Margins;
-using Soenneker.Quark.Components.ObjectFits;
-using Soenneker.Quark.Components.Overflows;
-using Soenneker.Quark.Components.Paddings;
-using Soenneker.Quark.Components.Positions;
-using Soenneker.Quark.Components.TextAlignments;
-using Soenneker.Quark.Components.TextSizes;
-using Soenneker.Quark.Components.VerticalAligns;
-using Soenneker.Quark.Components.Visibilities;
-using Soenneker.Quark.Components.Widths;
-using Soenneker.Quark.Components.TextDecorations;
-using Soenneker.Quark.Components.TextOverflows;
 
 namespace Soenneker.Quark.Components.Abstract;
 
@@ -189,7 +190,12 @@ public interface IComponent : IDisposable, IAsyncDisposable
     /// <summary>
     /// Gets or sets the text color to apply (implementation-specific mapping to classes or inline style).
     /// </summary>
-    Color TextColor { get; set; }
+    CssValue<ColorBuilder>? TextColor { get; set; }
+
+    /// <summary>
+    /// Gets or sets the background color to apply (implementation-specific mapping to classes or inline style).
+    /// </summary>
+    CssValue<ColorBuilder>? BackgroundColor { get; set; }
 
     /// <summary>
     /// Gets or sets the ARIA <c>role</c> attribute for accessibility semantics.

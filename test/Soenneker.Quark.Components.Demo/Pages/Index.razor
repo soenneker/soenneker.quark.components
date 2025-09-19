@@ -1,7 +1,7 @@
 ﻿@page "/"
-@using Soenneker.Quark.Components.Demo.Components
-@using Soenneker.Quark.Components.Margins
-@using Soenneker.Quark.Components.Heights
+@using Soenneker.Quark.Components.Builders.Colors
+@using Soenneker.Quark.Components.Builders.Heights
+@using Soenneker.Quark.Components.Builders.Margins
 
 <PageTitle>Quark Components Demo</PageTitle>
 
@@ -30,7 +30,50 @@
     <p>Focus count: @_focusCount</p>
 </DemoDiv>
 
-<DemoDiv Margin="Margin.S1">Margin</DemoDiv>
+<DemoDiv Margin="Margin.S1" BackgroundColor="Color.Danger">Margin</DemoDiv>
+
+<h2>Bootstrap Color Patterns Demo</h2>
+<p>This section demonstrates the three different Bootstrap color patterns:</p>
+
+<h3>1. Background Colors (bg-danger pattern)</h3>
+<p>Sets background color only - you need to manually set text color for contrast:</p>
+<DemoDiv BackgroundColor="Color.Danger" TextColor="Color.Light" Style="padding: 15px; margin: 10px 0; border-radius: 5px;">
+    <strong>Background Color Only</strong><br/>
+    Uses BackgroundColor="Color.Danger" + TextColor="Color.Light"
+</DemoDiv>
+
+<h3>2. Text Colors (text-danger pattern)</h3>
+<p>Sets text color only - no background change:</p>
+<DemoDiv TextColor="Color.Danger" Style="padding: 15px; margin: 10px 0; border: 2px solid #dee2e6; border-radius: 5px;">
+    <strong>Text Color Only</strong><br/>
+    Uses TextColor="Color.Danger"
+</DemoDiv>
+
+<h3>3. Text-BG Colors (text-bg-danger pattern)</h3>
+<p>Sets both background and text with proper contrast automatically:</p>
+<DemoDiv TextBackgroundColor="Color.Danger" Style="padding: 15px; margin: 10px 0; border-radius: 5px;">
+    <strong>Text-BG Color</strong><br/>
+    Uses TextBackgroundColor="Color.Danger" (Bootstrap handles contrast)
+</DemoDiv>
+
+<h3>Color Pattern Comparison</h3>
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin: 20px 0;">
+    <DemoDiv BackgroundColor="Color.Primary" TextColor="Color.Light" Style="padding: 15px; border-radius: 5px; text-align: center;">
+        <strong>bg-primary</strong><br/>
+        BackgroundColor="Color.Primary"<br/>
+        + TextColor="Color.Light"
+    </DemoDiv>
+    
+    <DemoDiv TextColor="Color.Primary" Style="padding: 15px; border: 2px solid #dee2e6; border-radius: 5px; text-align: center;">
+        <strong>text-primary</strong><br/>
+        TextColor="Color.Primary"
+    </DemoDiv>
+    
+    <DemoDiv TextBackgroundColor="Color.Primary" Style="padding: 15px; border-radius: 5px; text-align: center;">
+        <strong>text-bg-primary</strong><br/>
+        TextBackgroundColor="Color.Primary"
+    </DemoDiv>
+</div>
 
 <h2>Height and Width Examples</h2>
 
