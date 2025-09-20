@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Soenneker.Quark.Components.Builders;
 using Soenneker.Quark.Components.Builders.BoxShadows;
@@ -18,9 +21,6 @@ using Soenneker.Quark.Components.Builders.TextSizes;
 using Soenneker.Quark.Components.Builders.VerticalAligns;
 using Soenneker.Quark.Components.Builders.Visibilities;
 using Soenneker.Quark.Components.Builders.Widths;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Soenneker.Quark.Components.Abstract;
 

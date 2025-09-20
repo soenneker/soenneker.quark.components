@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components.Web;
@@ -8,6 +9,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using Serilog;
 using Serilog.Debugging;
+using Soenneker.Quark.Components.Builders.Colors;
+using Soenneker.Quark.Themes;
+using Soenneker.Quark.Themes.Options;
+using Soenneker.Quark.Themes.Registrars;
 using Soenneker.Serilog.Sinks.Browser.Blazor.Registrars;
 
 namespace Soenneker.Quark.Components.Demo;
@@ -30,9 +35,28 @@ public sealed class Program
                 BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
             });
 
+            var themeProvider = new ThemeProvider
+            {
+                CurrentTheme = "Dark",
+                Themes = new Dictionary<string, Theme>
+                {
+                    {
+                        "Dark", new Theme
+                        {
+                            Divs = new DivOptions
+                            {
+                                BackgroundColor = Color.Danger
+                            }
+                        }
+                    }
+                }
+            };
+
+            builder.Services.AddThemeProviderAsScoped(themeProvider);
+
             WebAssemblyHost host = builder.Build();
 
-            var jsRuntime = (IJSRuntime) host.Services.GetService(typeof(IJSRuntime))!;
+            var jsRuntime = (IJSRuntime)host.Services.GetService(typeof(IJSRuntime))!;
 
             SetGlobalLogger(jsRuntime);
 

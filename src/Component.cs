@@ -6,8 +6,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Soenneker.Blazor.Extensions.EventCallback;
 using Soenneker.Extensions.String;
-using Soenneker.Utils.AtomicBool;
-using Soenneker.Utils.PooledStringBuilders;
 using Soenneker.Quark.Components.Builders;
 using Soenneker.Quark.Components.Builders.Abstract;
 using Soenneker.Quark.Components.Builders.Borders;
@@ -41,14 +39,23 @@ using Soenneker.Quark.Components.Builders.VerticalAligns;
 using Soenneker.Quark.Components.Builders.Visibilities;
 using Soenneker.Quark.Components.Builders.Widths;
 using Soenneker.Quark.Components.Builders.ZIndexes;
+using Soenneker.Quark.Themes;
+using Soenneker.Quark.Themes.Abstract;
+using Soenneker.Quark.Themes.Options.Base;
+using Soenneker.Utils.AtomicBool;
+using Soenneker.Utils.PooledStringBuilders;
+using IComponent = Soenneker.Quark.Components.Abstract.IComponent;
 
 namespace Soenneker.Quark.Components;
 
 ///<inheritdoc cref="Abstract.IComponent"/>
-public abstract class Component : ComponentBase, Abstract.IComponent
+public abstract class Component : ComponentBase, IComponent
 {
     protected readonly AtomicBool Disposed = new();
     protected readonly AtomicBool AsyncDisposed = new();
+
+    [Inject]
+    protected IThemeProvider? ThemeProvider { get; set; }
 
     [Parameter]
     public virtual string? Id { get; set; }
@@ -180,6 +187,15 @@ public abstract class Component : ComponentBase, Abstract.IComponent
     public CssValue<TextBreakBuilder>? TextBreak { get; set; }
 
     [Parameter]
+    public CssValue<ColorBuilder>? TextColor { get; set; }
+
+    [Parameter]
+    public CssValue<ColorBuilder>? BackgroundColor { get; set; }
+
+    [Parameter]
+    public CssValue<ColorBuilder>? TextBackgroundColor { get; set; }
+
+    [Parameter]
     public EventCallback<MouseEventArgs> OnClick { get; set; }
 
     [Parameter]
@@ -207,15 +223,6 @@ public abstract class Component : ComponentBase, Abstract.IComponent
     public Dictionary<string, object>? Attributes { get; set; }
 
     [Parameter]
-    public CssValue<ColorBuilder>? TextColor { get; set; }
-
-    [Parameter]
-    public CssValue<ColorBuilder>? BackgroundColor { get; set; }
-
-    [Parameter]
-    public CssValue<ColorBuilder>? TextBackgroundColor { get; set; }
-
-    [Parameter]
     public string? Role { get; set; }
 
     [Parameter]
@@ -224,8 +231,11 @@ public abstract class Component : ComponentBase, Abstract.IComponent
     [Parameter]
     public string? AriaDescribedBy { get; set; }
 
-    protected ElementReference ElementRef { get; set; }
+    [Parameter]
+    public virtual string? Name { get; set; }
 
+    protected ElementReference ElementRef { get; set; }
+    
     protected override Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender && OnElementRefReady.HasDelegate)
@@ -236,6 +246,9 @@ public abstract class Component : ComponentBase, Abstract.IComponent
 
     protected virtual Dictionary<string, object> BuildAttributes()
     {
+        // Apply theme styles first (lowest precedence)
+        ApplyThemeStyles();
+
         int guess = 14 + (Attributes?.Count ?? 0);
         var attrs = new Dictionary<string, object>(guess);
 
@@ -471,7 +484,8 @@ public abstract class Component : ComponentBase, Abstract.IComponent
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void AddColorCss(ref PooledStringBuilder styB, ref PooledStringBuilder clsB, CssValue<ColorBuilder>? v, string classPrefix, string cssProperty)
+    private static void AddColorCss(ref PooledStringBuilder styB, ref PooledStringBuilder clsB, CssValue<ColorBuilder>? v, string classPrefix,
+        string cssProperty)
     {
         if (v is { IsEmpty: false })
         {
@@ -481,15 +495,9 @@ public abstract class Component : ComponentBase, Abstract.IComponent
                 return;
 
             if (v.Value.IsCssStyle)
-            {
-                // It's a CSS style value, apply the CSS property
                 AppendStyleDecl(ref styB, $"{cssProperty}: {result}");
-            }
             else
-            {
-                // It's a class value, apply the prefix
                 AppendClass(ref clsB, $"{classPrefix}-{result}");
-            }
         }
     }
 
@@ -637,4 +645,83 @@ public abstract class Component : ComponentBase, Abstract.IComponent
     }
 
     protected virtual Task OnDisposeAsync() => Task.CompletedTask;
+
+    private void ApplyThemeStyles()
+    {
+        if (ThemeProvider?.Themes == null)
+            return;
+
+        // Get the current theme name
+        string? themeName = ThemeProvider.CurrentTheme;
+
+        if (themeName.IsNullOrEmpty())
+            return;
+
+        if (ThemeProvider.Themes.TryGetValue(themeName, out Theme? theme))
+        {
+            ApplyThemeToComponent(theme);
+        }
+    }
+
+    private void ApplyThemeToComponent(Theme theme)
+    {
+        // Get the appropriate component options based on component name
+        ComponentOptions? componentOptions = GetComponentOptionsFromTheme(theme);
+
+        if (componentOptions == null)
+            return;
+
+        ApplyThemeProperty(componentOptions.Display, () => Display, value => Display = value);
+        ApplyThemeProperty(componentOptions.Visibility, () => Visibility, value => Visibility = value);
+        ApplyThemeProperty(componentOptions.Float, () => Float, value => Float = value);
+        ApplyThemeProperty(componentOptions.VerticalAlign, () => VerticalAlign, value => VerticalAlign = value);
+        ApplyThemeProperty(componentOptions.TextOverflow, () => TextOverflow, value => TextOverflow = value);
+        ApplyThemeProperty(componentOptions.BoxShadow, () => BoxShadow, value => BoxShadow = value);
+        ApplyThemeProperty(componentOptions.Margin, () => Margin, value => Margin = value);
+        ApplyThemeProperty(componentOptions.Padding, () => Padding, value => Padding = value);
+        ApplyThemeProperty(componentOptions.Position, () => Position, value => Position = value);
+        ApplyThemeProperty(componentOptions.Offset, () => Offset, value => Offset = value);
+        ApplyThemeProperty(componentOptions.TextSize, () => TextSize, value => TextSize = value);
+        ApplyThemeProperty(componentOptions.Width, () => Width, value => Width = value);
+        ApplyThemeProperty(componentOptions.MinWidth, () => MinWidth, value => MinWidth = value);
+        ApplyThemeProperty(componentOptions.MaxWidth, () => MaxWidth, value => MaxWidth = value);
+        ApplyThemeProperty(componentOptions.Height, () => Height, value => Height = value);
+        ApplyThemeProperty(componentOptions.MinHeight, () => MinHeight, value => MinHeight = value);
+        ApplyThemeProperty(componentOptions.MaxHeight, () => MaxHeight, value => MaxHeight = value);
+        ApplyThemeProperty(componentOptions.Overflow, () => Overflow, value => Overflow = value);
+        ApplyThemeProperty(componentOptions.OverflowX, () => OverflowX, value => OverflowX = value);
+        ApplyThemeProperty(componentOptions.OverflowY, () => OverflowY, value => OverflowY = value);
+        ApplyThemeProperty(componentOptions.ObjectFit, () => ObjectFit, value => ObjectFit = value);
+        ApplyThemeProperty(componentOptions.TextAlignment, () => TextAlignment, value => TextAlignment = value);
+        ApplyThemeProperty(componentOptions.TextDecorationLine, () => TextDecorationLine, value => TextDecorationLine = value);
+        ApplyThemeProperty(componentOptions.TextDecorationCss, () => TextDecorationCss, value => TextDecorationCss = value);
+        ApplyThemeProperty(componentOptions.Flex, () => Flex, value => Flex = value);
+        ApplyThemeProperty(componentOptions.Gap, () => Gap, value => Gap = value);
+        ApplyThemeProperty(componentOptions.Border, () => Border, value => Border = value);
+        ApplyThemeProperty(componentOptions.Opacity, () => Opacity, value => Opacity = value);
+        ApplyThemeProperty(componentOptions.ZIndex, () => ZIndex, value => ZIndex = value);
+        ApplyThemeProperty(componentOptions.PointerEvents, () => PointerEvents, value => PointerEvents = value);
+        ApplyThemeProperty(componentOptions.UserSelect, () => UserSelect, value => UserSelect = value);
+        ApplyThemeProperty(componentOptions.TextTransform, () => TextTransform, value => TextTransform = value);
+        ApplyThemeProperty(componentOptions.FontWeight, () => FontWeight, value => FontWeight = value);
+        ApplyThemeProperty(componentOptions.FontStyle, () => FontStyle, value => FontStyle = value);
+        ApplyThemeProperty(componentOptions.LineHeight, () => LineHeight, value => LineHeight = value);
+        ApplyThemeProperty(componentOptions.TextWrap, () => TextWrap, value => TextWrap = value);
+        ApplyThemeProperty(componentOptions.TextBreak, () => TextBreak, value => TextBreak = value);
+        ApplyThemeProperty(componentOptions.TextColor, () => TextColor, value => TextColor = value);
+        ApplyThemeProperty(componentOptions.BackgroundColor, () => BackgroundColor, value => BackgroundColor = value);
+        ApplyThemeProperty(componentOptions.TextBackgroundColor, () => TextBackgroundColor, value => TextBackgroundColor = value);
+    }
+
+    private static void ApplyThemeProperty<T>(T? themeValue, Func<T?> getCurrentValue, Action<T> setValue) where T : struct
+    {
+        if (themeValue.HasValue && !getCurrentValue()
+                .HasValue)
+            setValue(themeValue.Value);
+    }
+    
+    private ComponentOptions? GetComponentOptionsFromTheme(Theme theme)
+    {
+        return ThemeProvider.ComponentOptions.TryGetValue(Name, out Func<Theme, ComponentOptions?>? getter) ? getter(theme) : null;
+    }
 }

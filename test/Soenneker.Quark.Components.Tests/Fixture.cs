@@ -1,15 +1,16 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using Soenneker.Blazor.MockJsRuntime.Registrars;
 using Soenneker.Fixtures.Unit;
 using Soenneker.Utils.Test;
-using Soenneker.Blazor.MockJsRuntime.Registrars;
 
 namespace Soenneker.Quark.Components.Tests;
 
 public sealed class Fixture : UnitFixture
 {
-    public override System.Threading.Tasks.ValueTask InitializeAsync()
+    public override ValueTask InitializeAsync()
     {
         SetupIoC(Services);
 

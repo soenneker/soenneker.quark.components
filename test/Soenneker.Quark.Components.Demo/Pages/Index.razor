@@ -5,6 +5,8 @@
 
 <PageTitle>Quark Components Demo</PageTitle>
 
+<ThemeHost></ThemeHost>
+
 <img src="https://user-images.githubusercontent.com/4441470/224455560-91ed3ee7-f510-4041-a8d2-3fc093025112.png" />
 <h1>Soenneker.Quark.Components Demo</h1>
 <p>This page demonstrates the Quark Components library using a custom DemoDiv component.</p>
@@ -17,6 +19,8 @@
     <strong>Click me!</strong>
     <p>Click count: @_clickCount</p>
 </DemoDiv>
+
+<DemoDiv> This is a default div</DemoDiv>
 
 <DemoDiv OnMouseOver="@HandleMouseOver" OnMouseOut="@HandleMouseOut" 
          Style="@($"background-color: {_mouseOverColor}; padding: 15px; border-radius: 8px; cursor: pointer; text-align: center; border: 2px solid #7b1fa2; transition: background-color 0.3s;")">
@@ -103,9 +107,9 @@
 </DemoDiv>
 
 @code {
-    private int _clickCount = 0;
-    private int _mouseOverCount = 0;
-    private int _focusCount = 0;
+    private int _clickCount;
+    private int _mouseOverCount;
+    private int _focusCount;
     private string _mouseOverColor = "#e1f5fe";
     private string _focusColor = "#e8f5e8";
 
