@@ -45,7 +45,7 @@
 
     <ItemGroup>
         <PackageReference Include="Soenneker.Blazor.Extensions.EventCallback" Version="3.0.424" />
-        <PackageReference Include="Soenneker.Quark.Components.Core" Version="3.0.3" />
+        <PackageReference Include="Soenneker.Quark.Components.Core" Version="3.0.5" />
         <PackageReference Include="Soenneker.Quark.Themes" Version="3.0.2" />
     </ItemGroup>
 </Project>
