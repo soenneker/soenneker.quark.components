@@ -39,26 +39,20 @@ using Soenneker.Quark.Components.Builders.VerticalAligns;
 using Soenneker.Quark.Components.Builders.Visibilities;
 using Soenneker.Quark.Components.Builders.Widths;
 using Soenneker.Quark.Components.Builders.ZIndexes;
+using Soenneker.Quark.Components.Core;
 using Soenneker.Quark.Themes;
 using Soenneker.Quark.Themes.Abstract;
 using Soenneker.Quark.Themes.Options.Base;
-using Soenneker.Utils.AtomicBool;
 using Soenneker.Utils.PooledStringBuilders;
 using IComponent = Soenneker.Quark.Components.Abstract.IComponent;
 
 namespace Soenneker.Quark.Components;
 
 ///<inheritdoc cref="Abstract.IComponent"/>
-public abstract class Component : ComponentBase, IComponent
+public abstract class Component : CoreComponent, IComponent
 {
-    protected readonly AtomicBool Disposed = new();
-    protected readonly AtomicBool AsyncDisposed = new();
-
     [Inject]
     protected IThemeProvider? ThemeProvider { get; set; }
-
-    [Parameter]
-    public virtual string? Id { get; set; }
 
     [Parameter]
     public string? Class { get; set; }
@@ -613,38 +607,6 @@ public abstract class Component : ComponentBase, IComponent
         else
             attrs["style"] = $"{existing}; {fullDecl}";
     }
-
-
-    public virtual void Dispose()
-    {
-        // Run sync cleanup once
-        if (Disposed.TrySetTrue())
-        {
-            OnDispose();
-        }
-    }
-
-    public virtual async ValueTask DisposeAsync()
-    {
-        // Run async cleanup once
-        if (AsyncDisposed.TrySetTrue())
-        {
-            await OnDisposeAsync();
-        }
-
-        // Ensure the sync hook also runs once (if it hasn't already)
-        if (Disposed.TrySetTrue())
-        {
-            // ReSharper disable once MethodHasAsyncOverload
-            OnDispose();
-        }
-    }
-
-    protected virtual void OnDispose()
-    {
-    }
-
-    protected virtual Task OnDisposeAsync() => Task.CompletedTask;
 
     private void ApplyThemeStyles()
     {

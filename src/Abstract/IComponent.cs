@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Soenneker.Quark.Components.Builders;
@@ -21,19 +19,15 @@ using Soenneker.Quark.Components.Builders.TextSizes;
 using Soenneker.Quark.Components.Builders.VerticalAligns;
 using Soenneker.Quark.Components.Builders.Visibilities;
 using Soenneker.Quark.Components.Builders.Widths;
+using Soenneker.Quark.Components.Core.Abstract;
 
 namespace Soenneker.Quark.Components.Abstract;
 
 /// <summary>
 /// Base component class that serves as the building block for all HTML elements in Quark.
 /// </summary>
-public interface IComponent : IDisposable, IAsyncDisposable
+public interface IComponent : ICoreComponent
 {
-    /// <summary>
-    /// Gets or sets the HTML <c>id</c> attribute for the element.
-    /// </summary>
-    string? Id { get; set; }
-
     /// <summary>
     /// Gets or sets additional CSS class names to be merged into the rendered element's <c>class</c> attribute.
     /// </summary>
@@ -211,15 +205,4 @@ public interface IComponent : IDisposable, IAsyncDisposable
     /// Gets or sets the ARIA <c>aria-describedby</c> attribute to reference descriptive content.
     /// </summary>
     string? AriaDescribedBy { get; set; }
-
-    /// <summary>
-    /// Disposes managed resources for the component. Implementations should be idempotent.
-    /// </summary>
-    new void Dispose();
-
-    /// <summary>
-    /// Asynchronously disposes managed resources for the component. Implementations should be idempotent.
-    /// </summary>
-    /// <returns>A task that completes when asynchronous disposal is finished.</returns>
-    new ValueTask DisposeAsync();
 }

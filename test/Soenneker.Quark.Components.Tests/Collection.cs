@@ -8,6 +8,4 @@ namespace Soenneker.Quark.Components.Tests;
 /// ICollectionFixture interfaces.
 /// </summary>
 [CollectionDefinition("Collection")]
-public sealed class Collection : ICollectionFixture<Fixture>
-{
-}
+public sealed class Collection : ICollectionFixture<Fixture>;
