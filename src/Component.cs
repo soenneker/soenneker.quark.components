@@ -213,9 +213,6 @@ public abstract class Component : CoreComponent, IComponent
     [Parameter]
     public EventCallback<ElementReference> OnElementRefReady { get; set; }
 
-    [Parameter(CaptureUnmatchedValues = true)]
-    public Dictionary<string, object>? Attributes { get; set; }
-
     [Parameter]
     public string? Role { get; set; }
 
