@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Soenneker.Quark.Components.Builders;
 using Soenneker.Quark.Components.Builders.BoxShadows;
@@ -174,12 +173,6 @@ public interface IComponent : ICoreComponent
     /// The <see cref="ElementReference"/> is passed to the callback.
     /// </summary>
     EventCallback<ElementReference> OnElementRefReady { get; set; }
-
-    /// <summary>
-    /// Gets or sets additional attributes to be merged into the rendered element.
-    /// User-specified entries take precedence over generated attributes.
-    /// </summary>
-    Dictionary<string, object>? Attributes { get; set; }
 
     /// <summary>
     /// Gets or sets the text color to apply (implementation-specific mapping to classes or inline style).
