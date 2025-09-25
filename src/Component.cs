@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -44,11 +44,10 @@ using Soenneker.Quark.Themes;
 using Soenneker.Quark.Themes.Abstract;
 using Soenneker.Quark.Themes.Options.Base;
 using Soenneker.Utils.PooledStringBuilders;
-using IComponent = Soenneker.Quark.Components.Abstract.IComponent;
 
-namespace Soenneker.Quark.Components;
+namespace Soenneker.Quark;
 
-///<inheritdoc cref="Abstract.IComponent"/>
+///<inheritdoc cref="IComponent"/>
 public abstract class Component : CoreComponent, IComponent
 {
     [Inject]
@@ -188,7 +187,7 @@ public abstract class Component : CoreComponent, IComponent
 
     [Parameter]
     public CssValue<ColorBuilder>? TextBackgroundColor { get; set; }
-
+    
     [Parameter]
     public EventCallback<MouseEventArgs> OnClick { get; set; }
 

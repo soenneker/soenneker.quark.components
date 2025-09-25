@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Soenneker.Quark.Components.Builders;
 using Soenneker.Quark.Components.Builders.BoxShadows;
@@ -20,7 +20,7 @@ using Soenneker.Quark.Components.Builders.Visibilities;
 using Soenneker.Quark.Components.Builders.Widths;
 using Soenneker.Quark.Components.Core.Abstract;
 
-namespace Soenneker.Quark.Components.Abstract;
+namespace Soenneker.Quark;
 
 /// <summary>
 /// Base component class that serves as the building block for all HTML elements in Quark.

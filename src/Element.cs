@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Components;
-using Soenneker.Quark.Components.Abstract;
+using Microsoft.AspNetCore.Components;
 
-namespace Soenneker.Quark.Components;
+namespace Soenneker.Quark;
 
 ///<inheritdoc cref="IElement"/>
 public abstract class Element : Component, IElement
