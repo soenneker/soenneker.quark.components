@@ -9,11 +9,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using Serilog;
 using Serilog.Debugging;
-using Soenneker.Quark.Components.Builders.Colors;
-using Soenneker.Quark.Themes;
-using Soenneker.Quark.Themes.Options;
-using Soenneker.Quark.Themes.Registrars;
 using Soenneker.Serilog.Sinks.Browser.Blazor.Registrars;
+using Soenneker.Quark;
 
 namespace Soenneker.Quark.Components.Demo;
 
