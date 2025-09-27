@@ -201,7 +201,7 @@ public abstract class Component : CoreComponent, IComponent
 
     [Parameter]
     public CssValue<TruncateBuilder>? Truncate { get; set; }
-    
+
     [Parameter]
     public EventCallback<MouseEventArgs> OnClick { get; set; }
 
@@ -239,7 +239,7 @@ public abstract class Component : CoreComponent, IComponent
     public virtual string? Name { get; set; }
 
     protected ElementReference ElementRef { get; set; }
-    
+
     protected override Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender && OnElementRefReady.HasDelegate)
@@ -725,7 +725,7 @@ public abstract class Component : CoreComponent, IComponent
                 .HasValue)
             setValue(themeValue.Value);
     }
-    
+
     private ComponentOptions? GetComponentOptionsFromTheme(Theme theme)
     {
         return ThemeProvider.ComponentOptions.TryGetValue(Name, out Func<Theme, ComponentOptions?>? getter) ? getter(theme) : null;

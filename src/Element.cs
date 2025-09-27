@@ -5,6 +5,6 @@ namespace Soenneker.Quark;
 ///<inheritdoc cref="IElement"/>
 public abstract class Element : Component, IElement
 {
-    [Parameter] 
+    [Parameter]
     public RenderFragment? ChildContent { get; set; }
 }
