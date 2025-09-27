@@ -80,6 +80,11 @@ public interface IComponent : ICoreComponent
     CssValue<PositionBuilder>? Position { get; set; }
 
     /// <summary>
+    /// Gets or sets the position offset configuration (e.g., top, bottom, start, end).
+    /// </summary>
+    CssValue<PositionOffsetBuilder>? Offset { get; set; }
+
+    /// <summary>
     /// Gets or sets the text size configuration (e.g., font-size utilities).
     /// </summary>
     CssValue<TextSizeBuilder>? TextSize { get; set; }
@@ -90,14 +95,44 @@ public interface IComponent : ICoreComponent
     CssValue<WidthBuilder>? Width { get; set; }
 
     /// <summary>
+    /// Gets or sets the minimum width configuration (e.g., fixed, responsive, utility classes).
+    /// </summary>
+    CssValue<WidthBuilder>? MinWidth { get; set; }
+
+    /// <summary>
+    /// Gets or sets the maximum width configuration (e.g., fixed, responsive, utility classes).
+    /// </summary>
+    CssValue<WidthBuilder>? MaxWidth { get; set; }
+
+    /// <summary>
     /// Gets or sets the height configuration (e.g., fixed, responsive, utility classes).
     /// </summary>
     CssValue<HeightBuilder>? Height { get; set; }
 
     /// <summary>
+    /// Gets or sets the minimum height configuration (e.g., fixed, responsive, utility classes).
+    /// </summary>
+    CssValue<HeightBuilder>? MinHeight { get; set; }
+
+    /// <summary>
+    /// Gets or sets the maximum height configuration (e.g., fixed, responsive, utility classes).
+    /// </summary>
+    CssValue<HeightBuilder>? MaxHeight { get; set; }
+
+    /// <summary>
     /// Gets or sets the overflow configuration (e.g., hidden, auto, scroll).
     /// </summary>
     CssValue<OverflowBuilder>? Overflow { get; set; }
+
+    /// <summary>
+    /// Gets or sets the horizontal overflow configuration (e.g., hidden, auto, scroll).
+    /// </summary>
+    CssValue<OverflowBuilder>? OverflowX { get; set; }
+
+    /// <summary>
+    /// Gets or sets the vertical overflow configuration (e.g., hidden, auto, scroll).
+    /// </summary>
+    CssValue<OverflowBuilder>? OverflowY { get; set; }
 
     /// <summary>
     /// Gets or sets the object-fit configuration for replaced content (e.g., images, video).
@@ -113,6 +148,76 @@ public interface IComponent : ICoreComponent
     /// Gets or sets the CSS <c>text-decoration-line</c> value to apply inline.
     /// </summary>
     CssValue<TextDecorationBuilder>? TextDecorationLine { get; set; }
+
+    /// <summary>
+    /// Gets or sets the CSS <c>text-decoration</c> value to apply inline.
+    /// </summary>
+    CssValue<TextDecorationBuilder>? TextDecorationCss { get; set; }
+
+    /// <summary>
+    /// Gets or sets the flex configuration (e.g., flex direction, wrap, grow, shrink).
+    /// </summary>
+    CssValue<FlexBuilder>? Flex { get; set; }
+
+    /// <summary>
+    /// Gets or sets the gap configuration for flex and grid layouts.
+    /// </summary>
+    CssValue<GapBuilder>? Gap { get; set; }
+
+    /// <summary>
+    /// Gets or sets the border configuration (e.g., width, style, color).
+    /// </summary>
+    CssValue<BorderBuilder>? Border { get; set; }
+
+    /// <summary>
+    /// Gets or sets the opacity configuration.
+    /// </summary>
+    CssValue<OpacityBuilder>? Opacity { get; set; }
+
+    /// <summary>
+    /// Gets or sets the z-index configuration for stacking context.
+    /// </summary>
+    CssValue<ZIndexBuilder>? ZIndex { get; set; }
+
+    /// <summary>
+    /// Gets or sets the pointer events configuration (e.g., none, auto).
+    /// </summary>
+    CssValue<PointerEventsBuilder>? PointerEvents { get; set; }
+
+    /// <summary>
+    /// Gets or sets the user select configuration (e.g., none, text, all).
+    /// </summary>
+    CssValue<UserSelectBuilder>? UserSelect { get; set; }
+
+    /// <summary>
+    /// Gets or sets the text transform configuration (e.g., uppercase, lowercase, capitalize).
+    /// </summary>
+    CssValue<TextTransformBuilder>? TextTransform { get; set; }
+
+    /// <summary>
+    /// Gets or sets the font weight configuration (e.g., normal, bold, 100-900).
+    /// </summary>
+    CssValue<FontWeightBuilder>? FontWeight { get; set; }
+
+    /// <summary>
+    /// Gets or sets the font style configuration (e.g., normal, italic, oblique).
+    /// </summary>
+    CssValue<FontStyleBuilder>? FontStyle { get; set; }
+
+    /// <summary>
+    /// Gets or sets the line height configuration.
+    /// </summary>
+    CssValue<LineHeightBuilder>? LineHeight { get; set; }
+
+    /// <summary>
+    /// Gets or sets the text wrap configuration (e.g., wrap, nowrap, balance).
+    /// </summary>
+    CssValue<TextWrapBuilder>? TextWrap { get; set; }
+
+    /// <summary>
+    /// Gets or sets the text break configuration (e.g., normal, break-all, break-word).
+    /// </summary>
+    CssValue<TextBreakBuilder>? TextBreak { get; set; }
 
     /// <summary>
     /// Invoked when the element is clicked.
@@ -164,6 +269,96 @@ public interface IComponent : ICoreComponent
     /// Gets or sets the background color to apply (implementation-specific mapping to classes or inline style).
     /// </summary>
     CssValue<ColorBuilder>? BackgroundColor { get; set; }
+
+    /// <summary>
+    /// Gets or sets the text background color to apply (implementation-specific mapping to classes or inline style).
+    /// </summary>
+    CssValue<ColorBuilder>? TextBackgroundColor { get; set; }
+
+    /// <summary>
+    /// Gets or sets the animation configuration for CSS animations.
+    /// </summary>
+    CssValue<AnimationBuilder>? Animation { get; set; }
+
+    /// <summary>
+    /// Gets or sets the aspect ratio configuration.
+    /// </summary>
+    CssValue<AspectRatioBuilder>? AspectRatio { get; set; }
+
+    /// <summary>
+    /// Gets or sets the backdrop filter configuration.
+    /// </summary>
+    CssValue<BackdropFilterBuilder>? BackdropFilter { get; set; }
+
+    /// <summary>
+    /// Gets or sets the border radius configuration.
+    /// </summary>
+    CssValue<BorderRadiusBuilder>? BorderRadius { get; set; }
+
+    /// <summary>
+    /// Gets or sets the clearfix configuration.
+    /// </summary>
+    CssValue<ClearfixBuilder>? Clearfix { get; set; }
+
+    /// <summary>
+    /// Gets or sets the clip path configuration.
+    /// </summary>
+    CssValue<ClipPathBuilder>? ClipPath { get; set; }
+
+    /// <summary>
+    /// Gets or sets the cursor configuration.
+    /// </summary>
+    CssValue<CursorBuilder>? Cursor { get; set; }
+
+    /// <summary>
+    /// Gets or sets the CSS filter configuration.
+    /// </summary>
+    CssValue<FilterBuilder>? Filter { get; set; }
+
+    /// <summary>
+    /// Gets or sets the interaction configuration for hover, focus, and active states.
+    /// </summary>
+    CssValue<InteractionBuilder>? Interaction { get; set; }
+
+    /// <summary>
+    /// Gets or sets the object position configuration for replaced content.
+    /// </summary>
+    CssValue<ObjectPositionBuilder>? ObjectPosition { get; set; }
+
+    /// <summary>
+    /// Gets or sets the resize configuration.
+    /// </summary>
+    CssValue<ResizeBuilder>? Resize { get; set; }
+
+    /// <summary>
+    /// Gets or sets the screen reader configuration for accessibility.
+    /// </summary>
+    CssValue<ScreenReaderBuilder>? ScreenReader { get; set; }
+
+    /// <summary>
+    /// Gets or sets the scroll behavior configuration.
+    /// </summary>
+    CssValue<ScrollBehaviorBuilder>? ScrollBehavior { get; set; }
+
+    /// <summary>
+    /// Gets or sets the stretched link configuration.
+    /// </summary>
+    CssValue<StretchedLinkBuilder>? StretchedLink { get; set; }
+
+    /// <summary>
+    /// Gets or sets the CSS transform configuration.
+    /// </summary>
+    CssValue<TransformBuilder>? Transform { get; set; }
+
+    /// <summary>
+    /// Gets or sets the CSS transition configuration.
+    /// </summary>
+    CssValue<TransitionBuilder>? Transition { get; set; }
+
+    /// <summary>
+    /// Gets or sets the text truncation configuration.
+    /// </summary>
+    CssValue<TruncateBuilder>? Truncate { get; set; }
 
     /// <summary>
     /// Gets or sets the ARIA <c>role</c> attribute for accessibility semantics.

@@ -150,6 +150,57 @@ public abstract class Component : CoreComponent, IComponent
 
     [Parameter]
     public CssValue<ColorBuilder>? TextBackgroundColor { get; set; }
+
+    [Parameter]
+    public CssValue<AnimationBuilder>? Animation { get; set; }
+
+    [Parameter]
+    public CssValue<AspectRatioBuilder>? AspectRatio { get; set; }
+
+    [Parameter]
+    public CssValue<BackdropFilterBuilder>? BackdropFilter { get; set; }
+
+    [Parameter]
+    public CssValue<BorderRadiusBuilder>? BorderRadius { get; set; }
+
+    [Parameter]
+    public CssValue<ClearfixBuilder>? Clearfix { get; set; }
+
+    [Parameter]
+    public CssValue<ClipPathBuilder>? ClipPath { get; set; }
+
+    [Parameter]
+    public CssValue<CursorBuilder>? Cursor { get; set; }
+
+    [Parameter]
+    public CssValue<FilterBuilder>? Filter { get; set; }
+
+    [Parameter]
+    public CssValue<InteractionBuilder>? Interaction { get; set; }
+
+    [Parameter]
+    public CssValue<ObjectPositionBuilder>? ObjectPosition { get; set; }
+
+    [Parameter]
+    public CssValue<ResizeBuilder>? Resize { get; set; }
+
+    [Parameter]
+    public CssValue<ScreenReaderBuilder>? ScreenReader { get; set; }
+
+    [Parameter]
+    public CssValue<ScrollBehaviorBuilder>? ScrollBehavior { get; set; }
+
+    [Parameter]
+    public CssValue<StretchedLinkBuilder>? StretchedLink { get; set; }
+
+    [Parameter]
+    public CssValue<TransformBuilder>? Transform { get; set; }
+
+    [Parameter]
+    public CssValue<TransitionBuilder>? Transition { get; set; }
+
+    [Parameter]
+    public CssValue<TruncateBuilder>? Truncate { get; set; }
     
     [Parameter]
     public EventCallback<MouseEventArgs> OnClick { get; set; }
@@ -253,6 +304,23 @@ public abstract class Component : CoreComponent, IComponent
             AddCss(ref sty, ref cls, LineHeight);
             AddCss(ref sty, ref cls, TextWrap);
             AddCss(ref sty, ref cls, TextBreak);
+            AddCss(ref sty, ref cls, Animation);
+            AddCss(ref sty, ref cls, AspectRatio);
+            AddCss(ref sty, ref cls, BackdropFilter);
+            AddCss(ref sty, ref cls, BorderRadius);
+            AddCss(ref sty, ref cls, Clearfix);
+            AddCss(ref sty, ref cls, ClipPath);
+            AddCss(ref sty, ref cls, Cursor);
+            AddCss(ref sty, ref cls, Filter);
+            AddCss(ref sty, ref cls, Interaction);
+            AddCss(ref sty, ref cls, ObjectPosition);
+            AddCss(ref sty, ref cls, Resize);
+            AddCss(ref sty, ref cls, ScreenReader);
+            AddCss(ref sty, ref cls, ScrollBehavior);
+            AddCss(ref sty, ref cls, StretchedLink);
+            AddCss(ref sty, ref cls, Transform);
+            AddCss(ref sty, ref cls, Transition);
+            AddCss(ref sty, ref cls, Truncate);
 
             AddCss(ref sty, ref cls, Margin);
             AddCss(ref sty, ref cls, Padding);
@@ -632,6 +700,23 @@ public abstract class Component : CoreComponent, IComponent
         ApplyThemeProperty(componentOptions.TextColor, () => TextColor, value => TextColor = value);
         ApplyThemeProperty(componentOptions.BackgroundColor, () => BackgroundColor, value => BackgroundColor = value);
         ApplyThemeProperty(componentOptions.TextBackgroundColor, () => TextBackgroundColor, value => TextBackgroundColor = value);
+        ApplyThemeProperty(componentOptions.Animation, () => Animation, value => Animation = value);
+        ApplyThemeProperty(componentOptions.AspectRatio, () => AspectRatio, value => AspectRatio = value);
+        ApplyThemeProperty(componentOptions.BackdropFilter, () => BackdropFilter, value => BackdropFilter = value);
+        ApplyThemeProperty(componentOptions.BorderRadius, () => BorderRadius, value => BorderRadius = value);
+        ApplyThemeProperty(componentOptions.Clearfix, () => Clearfix, value => Clearfix = value);
+        ApplyThemeProperty(componentOptions.ClipPath, () => ClipPath, value => ClipPath = value);
+        ApplyThemeProperty(componentOptions.Cursor, () => Cursor, value => Cursor = value);
+        ApplyThemeProperty(componentOptions.Filter, () => Filter, value => Filter = value);
+        ApplyThemeProperty(componentOptions.Interaction, () => Interaction, value => Interaction = value);
+        ApplyThemeProperty(componentOptions.ObjectPosition, () => ObjectPosition, value => ObjectPosition = value);
+        ApplyThemeProperty(componentOptions.Resize, () => Resize, value => Resize = value);
+        ApplyThemeProperty(componentOptions.ScreenReader, () => ScreenReader, value => ScreenReader = value);
+        ApplyThemeProperty(componentOptions.ScrollBehavior, () => ScrollBehavior, value => ScrollBehavior = value);
+        ApplyThemeProperty(componentOptions.StretchedLink, () => StretchedLink, value => StretchedLink = value);
+        ApplyThemeProperty(componentOptions.Transform, () => Transform, value => Transform = value);
+        ApplyThemeProperty(componentOptions.Transition, () => Transition, value => Transition = value);
+        ApplyThemeProperty(componentOptions.Truncate, () => Truncate, value => Truncate = value);
     }
 
     private static void ApplyThemeProperty<T>(T? themeValue, Func<T?> getCurrentValue, Action<T> setValue) where T : struct
